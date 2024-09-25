@@ -4,7 +4,6 @@ from bs4 import BeautifulSoup
 def extract_all_text_to_txt(html_path, txt_path):
     with open(html_path, 'r', encoding='utf-8') as file:
         soup = BeautifulSoup(file, 'lxml')
-        excluded_tags = soup.select('tabel, head')
         # 移除 <head> 标签
         for head in soup.find_all('head'):
             head.decompose()
@@ -29,6 +28,7 @@ def extract_text_from_folder(folder_path,txt_path):
                 print(f"Extracting text from {html_path} and writing to {txt_path}:")
                 extract_all_text_to_txt(html_path, write_path)
                 print(f"Text written to {write_path}\n")
+
 
 os.makedirs('shakespeare_works', exist_ok=True)
 folder_path = 'shakespeare-master'
