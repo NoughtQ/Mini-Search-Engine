@@ -20,3 +20,7 @@ Testing: Design tests for the correctness of the inverted index (2 pts.) and thr
 Documentation: Chapter 1 (1 pt.), Chapter 2 (2 pts.), and finally a complete report (1 point for overall style of documentation).
 
 Note: Anyone who does excellent job on answering the Bonus question will gain extra points.
+
+## 计划
+
+1. 
