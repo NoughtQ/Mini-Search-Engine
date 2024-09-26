@@ -1,0 +1,65 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <map>
+#include <vector>
+#include <algorithm>
+#include <cctype>
+#include "../wordStem/english_stem.h"
+
+using namespace std;
+
+typedef pair<wstring, int> Pair;
+map<wstring, int> wordList;
+map<string, int> wordNumOfDoc;
+stemming::english_stem<> StemEnglish;
+
+int main()
+{
+    string file;
+    ifstream infile;
+    ofstream outfile;
+
+    infile.open("txt_title.txt");
+    outfile.open("file_word_count.txt",ios::out);
+    while(infile >> file)
+    {
+        string line;
+        ifstream in;
+        
+        in.open("shakespeare_works/"+file+".txt", ios::in);
+        while(getline(in, line))
+        {
+            wstring word = L"";
+            for(char &c : line)
+            {
+                if(isalnum(c))
+                    word += tolower(c);
+                else if(word.length() > 0)
+                {
+                    StemEnglish(word);
+                    if(wordList.find(word) == wordList.end())
+                        wordList[word] = 1;
+                    else
+                        wordList[word]++;
+                    wordNumOfDoc[file]++;
+                    word = L"";
+                }
+            }
+        }
+        outfile << file << " " << wordNumOfDoc[file] << endl;
+        in.close();
+    }
+    infile.close();
+    
+    vector<Pair> vec(wordList.begin(), wordList.end());
+    wofstream out;
+    sort(vec.begin(), vec.end(), [](const Pair& a, const Pair& b) { return a.second > b.second; });
+    out.open("word_count.txt", ios::out);
+    for(Pair &word : vec)
+        out << word.first << " " << word.second << endl;
+    out.close();
+
+}
+
+// g++ -o getStopWord getStopWord.cpp -Werror -Wall -Wextra
