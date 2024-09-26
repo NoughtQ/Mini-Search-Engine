@@ -1,10 +1,11 @@
 import os
 from bs4 import BeautifulSoup
 
+black_list = ['test.html','full.html','index.html','works.html','news.html','google30de5406cd6ff416.html','googlefea2bbd41b5b400b.html']
+
 def extract_all_text_to_txt(html_path, txt_path):
     with open(html_path, 'r', encoding='utf-8') as file:
         soup = BeautifulSoup(file, 'lxml')
-        excluded_tags = soup.select('tabel, head')
         # 移除 <head> 标签
         for head in soup.find_all('head'):
             head.decompose()
@@ -18,17 +19,20 @@ def extract_all_text_to_txt(html_path, txt_path):
         txt_file.write(text_content)
 
 def extract_text_from_folder(folder_path,txt_path):
-    for root, dirs, files in os.walk(folder_path):
-        for file in files:
-            if file.endswith('.html'):
-                if file in ['full.html','index.html',"works.html","news.html"]:
-                    continue
-                html_path = os.path.join(root, file)
-                txt_filename = file[:-5] + '.txt'  # 移除.html后缀并添加.txt后缀
-                write_path = os.path.join(txt_path, txt_filename)
-                print(f"Extracting text from {html_path} and writing to {txt_path}:")
-                extract_all_text_to_txt(html_path, write_path)
-                print(f"Text written to {write_path}\n")
+    with open('txt_title.txt', 'w', encoding='utf-8') as title_file:
+        for root, dirs, files in os.walk(folder_path):
+            for file in files:
+                if file.endswith('.html'):
+                    if file in black_list:
+                        continue
+                    html_path = os.path.join(root, file)
+                    title_file.write(file[:-5] + '\n') 
+                    txt_filename = file[:-5] + '.txt' 
+                    write_path = os.path.join(txt_path, txt_filename)
+                    print(f"Extracting text from {html_path} and writing to {txt_path}:")
+                    extract_all_text_to_txt(html_path, write_path)
+                    print(f"Text written to {write_path}\n")
+
 
 os.makedirs('shakespeare_works', exist_ok=True)
 folder_path = 'shakespeare-master'
