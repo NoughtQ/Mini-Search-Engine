@@ -53,11 +53,16 @@ int main()
     infile.close();
     
     vector<Pair> vec(wordList.begin(), wordList.end());
-    wofstream out;
+    wofstream out,out2;
     sort(vec.begin(), vec.end(), [](const Pair& a, const Pair& b) { return a.second > b.second; });
     out.open("word_count.txt", ios::out);
+    out2.open("stop_words.txt", ios::out);
     for(Pair &word : vec)
+    {
         out << word.first << " " << word.second << endl;
+        if(word.second >= 1115)
+            out2 << word.first << endl;
+    }
     out.close();
 
 }
