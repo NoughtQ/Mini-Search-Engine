@@ -5,7 +5,8 @@
 int main() {
     BplusTree InvIndex;
 
-    InvertedIndex();
+    InvIndex = InvertedIndex();
+    PrintBPTree(InvIndex);
 
     return 0;
 }

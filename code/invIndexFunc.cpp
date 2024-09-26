@@ -20,12 +20,14 @@ char * wstringToChararr(std::wstring wst);
 
 string docNames[MAXDOCSUM];
 
-void InvertedIndex() {
+BplusTree InvertedIndex() {
     char path[MAXREADSTRLEN];
     BplusTree InvIndex = CreateBP();
 
     askforDirPath(path);
     fileTraversaler(InvIndex, path);
+
+    return InvIndex;
 }
 
 void askforDirPath(char * path) {
@@ -37,7 +39,8 @@ void askforDirPath(char * path) {
 
 void fileTraversaler(BplusTree T, char * path) {
     int docCnt = 0;
-    FILE * fp;
+    char * wholePath;
+    FILE * fp = NULL;
     fs::path dirPath(path);
     
     if (fs::exists(dirPath) && fs::is_directory(dirPath)) {
@@ -48,11 +51,19 @@ void fileTraversaler(BplusTree T, char * path) {
                 // docNames[docCnt] = (string)malloc(sizeof(char) * (filename.length() + 1));
                 docNames[docCnt] = new char[filename.length() + 1]; 
                 strcpy(docNames[docCnt], filename.c_str());
-                fp = fopen(docNames[docCnt], "r");
+                wholePath = new char[MAXREADSTRLEN]; 
+                strcpy(wholePath, (dirPath.string() + "/" + filename).c_str());
+                fp = fopen(wholePath, "r");
+            
+                if (!fp) {
+                    printf("Couldn't open the file!\n");
+                    break;
+                }
                 GenerateInvertedIndex(T, docCnt++, fp);
             }
-        } 
-        fclose(fp);
+        }
+        if (fp)
+            fclose(fp);
     } else {
         perror("Could not open directory");
     }
@@ -69,27 +80,46 @@ void GenerateInvertedIndex(BplusTree T, int docCnt, FILE * fp) {
     std::wstring term_wstr;
     stemming::english_stem<> StemEnglish;
 
-    pre = cur = 0;
-    while (fgets(tmp, MAXREADSTRLEN - 1, fp) != NULL) {
+    while (fgets(tmp, MAXREADSTRLEN, fp) != NULL) {
+        pre = cur = 0;
         for (i = 0; i < strlen(tmp); i++) {
-            if (ispunct(tmp[i]) || isspace(tmp[i])) {
+            if (!isalpha(tmp[i])) {
                 cur = i;
-                term = (char *)malloc(sizeof(char) * (cur - pre + 1));
-                strncpy(term, tmp + pre, cur - pre);
-                term[cur - pre] = '\0';
+                if (cur - pre > 1) {
+                    term = (char *)malloc(sizeof(char) * (cur - pre + 1));
+                    strncpy(term, tmp + pre, cur - pre);
+                    term[cur - pre] = '\0';
 
-                term_wstr = chararrToWstring(term);
-                StemEnglish(term_wstr);
-                term = wstringToChararr(term_wstr);
-                
-                isDuplicated = false;
-                nodebp = FindBP(term, T, &isDuplicated);
-                if (!isDuplicated) {
-                    InsertBP(term, nodebp, T);
+                    term_wstr = chararrToWstring(term);
+                    StemEnglish(term_wstr);
+                    term = wstringToChararr(term_wstr);
+                    
+                    isDuplicated = false;
+                    nodebp = FindBP(term, T, &isDuplicated);
+                    if (!isDuplicated) {
+                        InsertBP(term, nodebp, T);
+                    }      
                 }
+
                 pre = cur;
             }
-        }        
+        }
+
+        // if (cur != i - 1) {
+        //     term = (char *)malloc(sizeof(char) * (cur - pre + 1));
+        //     strncpy(term, tmp + pre, cur - pre);
+        //     term[cur - pre] = '\0';
+
+        //     term_wstr = chararrToWstring(term);
+        //     StemEnglish(term_wstr);
+        //     term = wstringToChararr(term_wstr);
+            
+        //     isDuplicated = false;
+        //     nodebp = FindBP(term, T, &isDuplicated);
+        //     if (!isDuplicated) {
+        //         InsertBP(term, nodebp, T);
+        //     }               
+        // }     
     }
 }
 
@@ -112,6 +142,7 @@ BplusTree CreateBP() {
         // T->docpos[i]->pos = -1;
         // T->docpos[i]->next = NULL;
         T->time[i] = 0;
+        T->term[i] = (string)malloc(sizeof(char) * MAXWORDLEN);
         T->children[i] = (NodeBP)malloc(sizeof(struct nodebp));
     }
 
@@ -172,7 +203,7 @@ void InsertBP(string x, NodeBP nodebp, BplusTree Tree) {
     int i;
 
     strcpy(nodebp->term[nodebp->size++], x);
-    qsort(nodebp->term, nodebp->size, sizeof(char) * MAXWORDLEN, cmpData);
+    qsort(nodebp->term, nodebp->size, sizeof(nodebp->term[0]), cmpData);
 
     SplitBP(nodebp, Tree);
 }

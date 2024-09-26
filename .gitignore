@@ -2,6 +2,10 @@
 .vscode
 # template
 plan.png
+
+*.o
+invIndexTest
+
 shakespeare_works
 shakespeare-master
 changetxt.py

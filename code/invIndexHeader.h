@@ -49,7 +49,7 @@ struct queuebp {
 // };
 
 // BplusTree InvertedIndex(string pathName);
-void InvertedIndex(void);
+BplusTree InvertedIndex(void);
 void askforDirPath(char * path);
 void fileTraversaler(BplusTree T, char * path);
 
