@@ -16,7 +16,7 @@ def process_file(file_path,write_path):
         stemmer = PorterStemmer()
         stemmed_words = [stemmer.stem(word) for word in words]
         with open(write_path, 'w', encoding='utf-8') as f2:
-            f2.write(' '.join(stemmed_words))
+            f2.write('\n'.join(stemmed_words))
             print(f'Processed {file_path} and wrote to {write_path}.')
 
     
