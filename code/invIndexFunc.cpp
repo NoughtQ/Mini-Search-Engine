@@ -1,9 +1,97 @@
 // Implementation of methods related to B+ tree in invIndex.h
 #include "invIndexHeader.h"
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "wordStem/english_stem.h"
+#include <codecvt>
+#include <filesystem>
+#include <locale>
+#include <string>
+
+extern "C" {
+    #include <ctype.h>
+    #include <stdbool.h>
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include <string.h>
+}
+
+namespace fs = std::filesystem;
+std::wstring chararrToWstring(char * st);
+char * wstringToChararr(std::wstring wst);
+
+string docNames[MAXDOCSUM];
+
+void InvertedIndex() {
+    char path[MAXREADSTRLEN];
+    BplusTree InvIndex = CreateBP();
+
+    askforDirPath(path);
+    fileTraversaler(InvIndex, path);
+}
+
+void askforDirPath(char * path) {
+    // char path[MAXREADSTRLEN];
+    printf("Task 2: Build an inverted Index:\n");
+    printf("Please input the path of the documents:\nPath: ");
+    scanf("%s", path);
+}
+
+void fileTraversaler(BplusTree T, char * path) {
+    int docCnt = 0;
+    FILE * fp;
+    fs::path dirPath(path);
+    
+    if (fs::exists(dirPath) && fs::is_directory(dirPath)) {
+        for (const auto& entry : fs::directory_iterator(dirPath)) {
+            if (fs::is_regular_file(entry)) {
+                std::string filename = entry.path().filename().string();
+                // std::cout << filename << std::endl;
+                // docNames[docCnt] = (string)malloc(sizeof(char) * (filename.length() + 1));
+                docNames[docCnt] = new char[filename.length() + 1]; 
+                strcpy(docNames[docCnt], filename.c_str());
+                fp = fopen(docNames[docCnt], "r");
+                GenerateInvertedIndex(T, docCnt++, fp);
+            }
+        } 
+        fclose(fp);
+    } else {
+        perror("Could not open directory");
+    }
+}
+
+
+void GenerateInvertedIndex(BplusTree T, int docCnt, FILE * fp) {
+    int i;
+    int pre, cur;
+    char tmp[MAXREADSTRLEN];
+    char * term;
+    bool isDuplicated;
+    NodeBP nodebp;
+    std::wstring term_wstr;
+    stemming::english_stem<> StemEnglish;
+
+    pre = cur = 0;
+    while (fgets(tmp, MAXREADSTRLEN - 1, fp) != NULL) {
+        for (i = 0; i < strlen(tmp); i++) {
+            if (ispunct(tmp[i]) || isspace(tmp[i])) {
+                cur = i;
+                term = (char *)malloc(sizeof(char) * (cur - pre + 1));
+                strncpy(term, tmp + pre, cur - pre);
+                term[cur - pre] = '\0';
+
+                term_wstr = chararrToWstring(term);
+                StemEnglish(term_wstr);
+                term = wstringToChararr(term_wstr);
+                
+                isDuplicated = false;
+                nodebp = FindBP(term, T, &isDuplicated);
+                if (!isDuplicated) {
+                    InsertBP(term, nodebp, T);
+                }
+                pre = cur;
+            }
+        }        
+    }
+}
 
 
 BplusTree CreateBP() {
@@ -238,4 +326,21 @@ int cmpNodeBP(const void * a, const void * b) {
     const NodeBP nodebpB = *(const NodeBP*)b;
 
     return nodebpA->term[0] - nodebpB->term[0];
+}
+
+std::wstring chararrToWstring(char * st) {
+    std::string tmp(st);
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+    std::wstring wstr = converter.from_bytes(tmp);
+
+    return wstr;
+}
+
+char * wstringToChararr(std::wstring wst) {
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+    std::string tmp = converter.to_bytes(wst);
+    char * st = new char[tmp.size() + 1];
+    strcpy(st, tmp.c_str());
+
+    return st;
 }

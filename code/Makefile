@@ -1,26 +1,19 @@
-invIndexHeader = invIndexHeader.h wordStem/english_stem.h wordStem/stemming.h
+iiHeader = invIndexHeader.h
+wsHeader = wordStem/english_stem.h wordStem/stemming.h
 
-invIndexFile = invIndexFunc.c invIndexGenerator.cpp invIndexMain.c
+II_OBJ = invIndexFunc.o 
+IITEST_OBJ = invIndexTest.o
 
-UNAME := $(shell uname)
-ifeq ($(UNAME),Linux)
-    CFLAGS += -DLINUX
-    OS = invIndexUnix.c
-else ifeq ($(UNAME),Darwin)
-    CFLAGS += -DMACOS
-    OS = invIndexUnix.c
-else ifeq ($(UNAME),Windows_NT)
-    CFLAGS += -DWINDOWS
-    OS = invIndexWin.c
-endif
+invIndexTest : $(IITEST_OBJ) $(II_OBJ)
+	g++ -o $@ $^ -std=c++17
 
-objects = invIndexTest.o
+$(IITEST_OBJ) $(II_OBJ) : $(wsHeader) $(iiHeader) 
 
-invIndexTest : invIndexTest.o
-	cc -o invIndexTest invIndexTest.o
-
-invIndexTest.o : $(invIndexHeader)
-	cc -c $(invIndexFile) $(OS) invIndexTest.c
-
+.PHONY : clean
 clean :
-	rm -f *.o
+	rm -f invIndexTest *.o
+
+
+
+
+

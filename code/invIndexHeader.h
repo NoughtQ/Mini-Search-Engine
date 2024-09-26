@@ -1,6 +1,8 @@
 // Use B+ tree to store and access to the inverted index
 // Declaration of properties, methods and some constants related to B+ tree
 #include <stdbool.h>
+#include <stdio.h>
+
 #ifndef INVINDEX_H
 #define INVINDEX_H   // In case of re-inclusion of this header file
 
@@ -16,7 +18,7 @@ typedef struct nodebp * NodeBP;
 typedef struct nodebp * BplusTree;
 typedef char * string;
 
-string docNames[MAXDOCSUM];
+extern string docNames[MAXDOCSUM];
 
 struct nodebp {
     int size;
@@ -46,9 +48,13 @@ struct queuebp {
 //     DocPos next;
 // };
 
-BplusTree InvertedIndex(string pathName);
-void InvertedIndexWin(BplusTree T, string pathName);
-void InvertedIndexUnix(BplusTree T, string pathName);
+// BplusTree InvertedIndex(string pathName);
+void InvertedIndex(void);
+void askforDirPath(char * path);
+void fileTraversaler(BplusTree T, char * path);
+
+// void InvertedIndexWin(BplusTree T, string pathName);
+// void InvertedIndexUnix(BplusTree T, string pathName);
 void GenerateInvertedIndex(BplusTree T, int docCnt, FILE * fp);
 
 BplusTree CreateBP();
@@ -64,5 +70,7 @@ NodeBP DequeueBP(QueueBP Q);
 
 int cmpData(const void * a, const void * b);
 int cmpNodeBP(const void * a, const void * b);
+
+
 
 #endif 
