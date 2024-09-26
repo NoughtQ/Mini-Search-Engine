@@ -12,11 +12,11 @@
 #define MAXDOCSUM 500000
 #define MAXREADSTRLEN 101
 
-string docNames[MAXDOCSUM];
-
 typedef struct nodebp * NodeBP;
 typedef struct nodebp * BplusTree;
 typedef char * string;
+
+string docNames[MAXDOCSUM];
 
 struct nodebp {
     int size;
@@ -24,7 +24,7 @@ struct nodebp {
 
     string term[ORDER + 1];
     int time[ORDER + 1];
-    DocList docpos[ORDER + 1];
+    // DocList docpos[ORDER + 1];
 
     NodeBP children[ORDER + 1];
     NodeBP parent;
@@ -39,12 +39,17 @@ struct queuebp {
     NodeBP term[SIZE];
 };
 
-typedef struct doclist * DocList;
+// typedef struct docpos * DocPos;
 
-struct doclist {
-    int pos;
-    DocList next;
-};
+// struct docpos {
+//     int pos;
+//     DocPos next;
+// };
+
+BplusTree InvertedIndex(string pathName);
+void InvertedIndexWin(BplusTree T, string pathName);
+void InvertedIndexUnix(BplusTree T, string pathName);
+void GenerateInvertedIndex(BplusTree T, int docCnt, FILE * fp);
 
 BplusTree CreateBP();
 NodeBP FindBP(string x, BplusTree T, bool * flag);
@@ -53,9 +58,9 @@ void InsertBP(string x, NodeBP nodebp, BplusTree Tree);
 void SplitBP(NodeBP nodebp, BplusTree Tree);
 void PrintBPTree(BplusTree T);
 
-QueueBP CreateQueue();
-void Enqueue(NodeBP nodebp, QueueBP Q);
-NodeBP Dequeue(QueueBP Q);
+QueueBP CreateQueueBP();
+void EnqueueBP(NodeBP nodebp, QueueBP Q);
+NodeBP DequeueBP(QueueBP Q);
 
 int cmpData(const void * a, const void * b);
 int cmpNodeBP(const void * a, const void * b);

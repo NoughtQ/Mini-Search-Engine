@@ -2,13 +2,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <windows.h>
+#include <dirent.h>
 
-// void InvertedIndexWin(BplusTree T, string pathName);
+// void InvertedIndexUnix(BplusTree T, string pathName);
 
-void InvertedIndexWin(BplusTree T, string pathName) {
-    WIN32_FIND_DATA file_data;
-    HANDLE hFind = FileFirstFile(pathName, &file_data);
+void InvertedIndexUnix(BplusTree T, string pathName) {
+
+    DIR * dir;
+    struct dirent *ent;
     FILE * fp;
 
     int docCnt = 0;
@@ -18,21 +19,20 @@ void InvertedIndexWin(BplusTree T, string pathName) {
     NodeBP tmp;
     BplusTree InvertedIndex = CreateBP();
 
-    if (hFind != INVALID_HANDLE_VALUE) {
-        do {
-            if (!(file_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-                strcpy(docNames[docCnt], file_data.cFileName);
+    dir = opendir(pathName);
+    if (dir != NULL) {
+        while ((ent = readdir(dir)) != NULL) {
+                strcpy(docNames[docCnt], ent->d_name);
                 fp = fopen(docNames[docCnt], "r");
                 if (!fp) {
                     perror("Error opening file");
                     exit(1);
                 }
                 GenerateInvertedIndex(T, docCnt++, fp);
-            }
-        } while (FindNextFile(hFind, &file_data) != 0);
+        } 
 
         fclose(fp);
-        FindClose(hFind);
+        closedir(dir);
 
         PrintBPTree(InvertedIndex);
     } else {

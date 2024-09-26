@@ -1,15 +1,18 @@
 #include "invIndexHeader.h"
 #include <stdio.h>
 
+// BplusTree InvertedIndex(string pathName);
 
-int main() {   // void InvertedIndex();
-    BplusTree InvertedIndex;
+BplusTree InvertedIndex(string pathName) {   
+    BplusTree InvIndex;
+
+    InvIndex = CreateBP();
 
     #ifdef _WIN32
-        InvertedIndexWin(InvertedIndex);
+        InvertedIndexWin(InvIndex, pathName);
     #else    // such as Linux, Mac OS, etc.
-        InvertedIndexUnix(InvertedIndex);
+        InvertedIndexUnix(InvIndex, pathName);
     #endif
 
-    return 0;
+    return InvIndex;
 }

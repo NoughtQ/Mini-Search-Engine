@@ -6,7 +6,6 @@
 #include <string.h>
 
 
-
 BplusTree CreateBP() {
     BplusTree T = (BplusTree)malloc(sizeof(struct nodebp));
     if (T == NULL) {
@@ -20,10 +19,10 @@ BplusTree CreateBP() {
     //     T->term[i] = (string)malloc(sizeof(char) * MAXWORDLEN);
     // }
     
-    
     for (i = 0; i <= ORDER; i++) {
-        T->docpos[i] = (DocList)malloc(sizeof(struct doclist));
-        T->docpos[i]->next = NULL;
+        // T->docpos[i] = (DocList)malloc(sizeof(struct doclist));
+        // T->docpos[i]->pos = -1;
+        // T->docpos[i]->next = NULL;
         T->time[i] = 0;
         T->children[i] = (NodeBP)malloc(sizeof(struct nodebp));
     }
@@ -63,12 +62,17 @@ NodeBP FindBP(string x, BplusTree T, bool * flag) {
 
 void isSameTerm(string term, NodeBP nodebp, bool * flag) {
     int i;
+    // DocList tmp;
 
     if (nodebp->size) {
         for (i = 0; i < nodebp->size; i++) {
             if (!strcmp(term, nodebp->term[i])) {
                 nodebp->time[i]++;
-                flag = true;
+                
+                // tmp = (DocList)malloc(sizeof(struct doclist));
+                // tmp->pos = 
+
+                *flag = true;
                 break;
             }
         }
@@ -98,13 +102,13 @@ void SplitBP(NodeBP nodebp, BplusTree Tree) {
     parent = nodebp->parent;
 
     if (!parent) {
-        tmpNodeBP = Create();
+        tmpNodeBP = CreateBP();
         parent = (NodeBP)malloc(sizeof(struct nodebp));
         Tree = parent = tmpNodeBP;
     }
 
-    lnodebp = Create();
-    rnodebp = Create();
+    lnodebp = CreateBP();
+    rnodebp = CreateBP();
     lnodebp->parent = rnodebp->parent = parent;
 
     if (!nodebp->childrenSize) {
@@ -171,23 +175,23 @@ void PrintBPTree(BplusTree T) {
     QueueBP q;
 
     q = CreateQueueBP();
-    Enqueue(T, q);
-    Enqueue(NULL, q);
+    EnqueueBP(T, q);
+    EnqueueBP(NULL, q);
 
     while (q->size) {
-        nodebp = Dequeue(q);
+        nodebp = DequeueBP(q);
         if (!nodebp) {
             printf("\n");
             if (q->size) {
-                Enqueue(NULL, q);
+                EnqueueBP(NULL, q);
             }
         } else {
             printf("[");
             for (i = 0; i < nodebp->size; i++) {
                 if (!i) {
-                    printf("%d", nodebp->term[i]);
+                    printf("%s", nodebp->term[i]);
                 } else {
-                    printf(",%d", nodebp->term[i]);
+                    printf(", %s", nodebp->term[i]);
                 }
             }
             printf("]");
@@ -195,7 +199,7 @@ void PrintBPTree(BplusTree T) {
 
         if (nodebp) {
             for (i = 0; i < nodebp->childrenSize; i++) {
-                Enqueue(nodebp->children[i], q);
+                EnqueueBP(nodebp->children[i], q);
             }
         }
 
@@ -203,7 +207,7 @@ void PrintBPTree(BplusTree T) {
 
 }
 
-QueueBP CreateQueue() {
+QueueBP CreateQueueBP() {
     QueueBP Q = (QueueBP)malloc(sizeof(struct queuebp));
     Q->size = 0;
     Q->front = Q->rear = 0;
@@ -211,12 +215,12 @@ QueueBP CreateQueue() {
     return Q;
 }
 
-void Enqueue(NodeBP nodebp, QueueBP Q) {
+void EnqueueBP(NodeBP nodebp, QueueBP Q) {
     Q->term[Q->rear++] = nodebp;
     Q->size++;
 }
 
-NodeBP Dequeue(QueueBP Q) {
+NodeBP DequeueBP(QueueBP Q) {
     NodeBP returnNodeBP = Q->term[Q->front++];
     Q->size--;
     return returnNodeBP;
