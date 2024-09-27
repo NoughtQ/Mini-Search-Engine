@@ -16,7 +16,6 @@ extern "C" {
 
 namespace fs = std::filesystem;
 
-
 string docNames[MAXDOCSUM];
 
 BplusTree InvertedIndex(bool isTest) {
@@ -26,7 +25,12 @@ BplusTree InvertedIndex(bool isTest) {
 
     askforFilePos(dir, fname, isTest);
     InvIndex = fileTraversaler(InvIndex, dir, fname, isTest);
-    printf("Build successfully!\n");
+    if (InvIndex->size) {
+        printf("Build successfully!\n");
+    } else {
+        printf("Fail to build an inverted index!\n");
+    }
+    
 
     return InvIndex;
 }
@@ -55,7 +59,6 @@ BplusTree fileTraversaler(BplusTree T, char * dir, char * fname, bool isTest) {
             for (const auto& entry : fs::directory_iterator(dirPath)) {
                 if (fs::is_regular_file(entry)) {
                     std::string filename = entry.path().filename().string();
-                    // std::cout << filename << std::endl;
                     docNames[docCnt] = new char[filename.length() + 1]; 
                     strcpy(docNames[docCnt], filename.c_str());
                     strcpy(wholePath, (dirPath.string() + "/" + filename).c_str());
@@ -110,7 +113,6 @@ BplusTree GenerateInvertedIndex(BplusTree T, int docCnt, FILE * fp) {
 
     while (fgets(tmp, MAXREADSTRLEN - 1, fp) != NULL) {
         pre = cur = 0;
-        // tmp[strlen(tmp)] = '\n';
         for (i = 0; i < strlen(tmp); i++) {
             if (!isalpha(tmp[i])) {
                 cur = i;
@@ -168,11 +170,7 @@ BplusTree CreateBP() {
     for (i = 0; i <= ORDER; i++) {
         T->data[i] = (Data)malloc(sizeof(struct data));
         T->data[i]->term = (string)malloc(sizeof(char) * MAXWORDLEN);
-        T->data[i]->poslist = (PosList)malloc(sizeof(struct poslist));
-        T->data[i]->poslist->size = 0;
-        T->data[i]->poslist->front = (PosData)malloc(sizeof(struct posdata));
-        T->data[i]->poslist->rear = (PosData)malloc(sizeof(struct posdata));
-        T->data[i]->poslist->front = T->data[i]->poslist->rear;
+        T->data[i]->poslist = CreatePL();
 
         T->children[i] = (NodeBP)malloc(sizeof(struct nodebp));
     }
@@ -216,32 +214,32 @@ void isSameTerm(string term, int docCnt, NodeBP nodebp, bool * flag, bool isSear
         for (i = 0; i < nodebp->size; i++) {
             if (!strcmp(term, nodebp->data[i]->term)) {
                 if (!isSearch) {
-                    // nodebp->data[i]->time++;
-                    EnqueuePD(docCnt, nodebp->data[i]->poslist);
+                    EnqueuePL(docCnt, nodebp->data[i]->poslist);
                 } else {
-                    int size = nodebp->data[i]->poslist->size;
+                    PosList poslist = nodebp->data[i]->poslist;
+                    int size = poslist->size;
+                    int cnt = 0;
+
                     printf("Successfully find the word!\n");
-                    printf("Frequency: %d\n", size);
                     printf("The word was found in files below:\n");
                     
-                    // PosData cur = nodebp->data[i]->poslist->front->next;
-                    // int abspos = 0;
                     int j;
-                    int * posArr = (int *)malloc(sizeof(int) * size);
+                    int ** posArr = (int **)malloc(sizeof(int *) * size);
+                    for (j = 0; j < size; j++) {
+                        posArr[i] = (int *)malloc(sizeof(int) * 2);
+                    }
 
-                    posArr = RetrievePD(nodebp->data[i]->poslist);
+                    posArr = RetrievePL(poslist);
 
                     for (j = 0; j < size; j++) {
-                        // abspos += posArr[j];
-                        printf("%s\n", docNames[posArr[j]]);
+                        if (posArr[j][1] <= 1) 
+                            printf("%s: %d time\n", docNames[posArr[j][0]], posArr[j][1]);
+                        else
+                            printf("%s: %d times\n", docNames[posArr[j][0]], posArr[j][1]);
+                        cnt += posArr[j][1];
                     }
+                    printf("Frequency: %d\n", cnt);
                     printf("-----------------------------------\n");
-
-                    // while (cur != NULL) {
-                    //     abspos += cur->pos;
-                    //     printf("%s\n", docNames[abspos]);
-                    //     cur = cur->next;
-                    // }
                 }
 
                 *flag = true;
@@ -255,8 +253,7 @@ BplusTree InsertBP(string term, int docCnt, NodeBP nodebp, BplusTree Tree) {
     int i;
 
     strcpy(nodebp->data[nodebp->size]->term, term);
-    // nodebp->data[nodebp->size++]->time++;
-    EnqueuePD(docCnt, nodebp->data[nodebp->size++]->poslist);
+    EnqueuePL(docCnt, nodebp->data[nodebp->size++]->poslist);
     qsort(nodebp->data, nodebp->size, sizeof(nodebp->data[0]), cmpData);
 
     Tree = SplitBP(nodebp, Tree);
@@ -289,13 +286,11 @@ BplusTree SplitBP(NodeBP nodebp, BplusTree Tree) {
         cut = LEAFCUT;
         
         for (i = 0; i < cut; i++) {
-            // strcpy(lnodebp->data[i]->term, nodebp->data[i]->term);
             lnodebp->data[i] = nodebp->data[i];
         }
         lnodebp->size = cut;
 
         for (j = cut; j < nodebp->size; j++) {
-            // strcpy(rnodebp->data[j - cut]->term nodebp->data[j]->term);
             rnodebp->data[j - cut] = nodebp->data[j];
         }
         rnodebp->size = nodebp->size - cut;
@@ -306,7 +301,6 @@ BplusTree SplitBP(NodeBP nodebp, BplusTree Tree) {
         for (i = 0; i <= cut; i++) {
             if (i != cut) 
                 lnodebp->data[i] = nodebp->data[i];
-                // strcpy(lnodebp->data[i]->term, nodebp->data[i]->term);
             lnodebp->children[i] = nodebp->children[i];
             lnodebp->children[i]->parent = lnodebp;
         }
@@ -315,7 +309,6 @@ BplusTree SplitBP(NodeBP nodebp, BplusTree Tree) {
 
         for (j = cut + 1; j < nodebp->size; j++) {
             rnodebp->data[j - cut - 1] = nodebp->data[j];
-            // strcpy(rnodebp->data[j - cut - 1]->term, nodebp->data[j]->term);
         }
         for (j = cut + 1; j < nodebp->childrenSize; j++) {
             rnodebp->children[j - cut - 1] = nodebp->children[j];
@@ -325,7 +318,6 @@ BplusTree SplitBP(NodeBP nodebp, BplusTree Tree) {
         rnodebp->childrenSize = nodebp->childrenSize - cut - 1;
     }
 
-    // strcpy(parent->data[parent->size++]->term, nodebp->data[cut]->term);
     parent->data[parent->size++] = nodebp->data[cut];
     if (parent->childrenSize) {
         for (i = 0; i < parent->childrenSize; i++) {
@@ -383,9 +375,7 @@ void PrintBPTree(BplusTree T) {
                 EnqueueBP(nodebp->children[i], q);
             }
         }
-
     }
-
 }
 
 QueueBP CreateQueueBP() {
@@ -415,36 +405,171 @@ NodeBP DequeueBP(QueueBP Q) {
     return returnNodeBP;
 }
 
-void EnqueuePD(int pos, PosList L) {
-    PosData tmp = (PosData)malloc(sizeof(struct posdata));
-    if (!tmp) {
-        printf("Fail to create a new position data!\n");
-        exit(1);
-    }
+PosList CreatePL() {
+    PosList L;
 
-    tmp->pos = pos;
-    tmp->next = L->rear->next;
-    L->rear->next = tmp;
-    L->rear = tmp;
-    L->size++;
+    L = (PosList)malloc(sizeof(struct poslist));
+    L->size = 0;
+    L->front = (PosData)malloc(sizeof(struct posdata));
+    L->rear = (PosData)malloc(sizeof(struct posdata));
+    L->front = L->rear;
+    L->rear->pos = -1;
+
+    return L;
 }
 
-int * RetrievePD(PosList L) {
+void EnqueuePL(int pos, PosList L) {
+    if (L->rear->pos != pos) {
+        PosData tmp = (PosData)malloc(sizeof(struct posdata));
+        if (!tmp) {
+            printf("Fail to create a new position data!\n");
+            exit(1);
+        }
+
+        tmp->pos = pos;
+        tmp->time = 1;
+        tmp->next = L->rear->next;
+        L->rear->next = tmp;
+        L->rear = tmp;
+        L->size++;
+    } else {
+        L->rear->time++;
+    }
+
+}
+
+int ** RetrievePL(PosList L) {
     if (!L->size) {
         printf("Empty position-data queue!\n");
         exit(1);
     }
 
-    int i = 0;
-    int * posArr = (int *)malloc(sizeof(int) * L->size);
+    int i = 0, j;
+    
+    int ** posArr = (int **)malloc(sizeof(int *) * L->size);
+    for (j = 0; j < L->size; j++) {
+        posArr[j] = (int *)malloc(sizeof(int) * 2);
+    }
+
     PosData cur = L->front->next;
 
     while (cur != NULL) {
-        posArr[i++] = cur->pos;
+        posArr[i][0] = cur->pos;
+        posArr[i][1] = cur->time;
         cur = cur->next;
+        i++;
     }
 
     return posArr;
+}
+
+HashTb GenerateHashTb() {
+    int i;
+    int pre, cur;
+    HashTb H;
+    FILE * fp;
+    string fname;
+    char tmp[MAXREADSTRLEN];
+
+    H = InitHashTb();
+
+    strcpy(fname, "stop_words.txt");
+    fp = fopen(fname, "r");
+    if (!fp) {
+        printf("Fail to open the file of stopwords!\n");
+        exit(1);
+    }
+
+    while (fgets(tmp, MAXREADSTRLEN - 1, fp) != NULL) {
+        pre = cur = 0;
+        for (i = 0; i < strlen(tmp); i++) {
+            if (!isalpha(tmp[i])) {
+                cur = i;
+                if (cur > pre) {
+                    term = (char *)malloc(sizeof(char) * (cur - pre + 1));
+                    strncpy(term, tmp + pre, cur - pre);
+                    term[cur - pre] = '\0';
+
+
+                }
+
+                pre = cur + 1;
+            }
+        }
+
+        if (!cur || pre > cur && pre != i) {
+            cur = i;
+            term = (char *)malloc(sizeof(char) * (cur - pre + 1));
+            strncpy(term, tmp + pre, cur - pre);
+            term[cur - pre] = '\0';
+
+            term_wstr = chararrToWstring(term);
+            StemEnglish(term_wstr);
+            term = wstringToChararr(term_wstr);
+            
+            isDuplicated = false;
+            nodebp = FindBP(term, docCnt, T, &isDuplicated);
+            if (!isDuplicated) {
+                T = InsertBP(term, docCnt, nodebp, T);
+            }               
+        }  
+    }
+
+    fclose(fp);
+    return H;
+}
+
+HashTb InitHashTb() {
+    HashTb H;
+    int i;
+
+    H = (HashTb)malloc(sizeof(struct hashtb));
+    if (H == NULL) {
+        printf("Fail to create a hash table for stopwords!"\n);
+        exit(1);
+    }
+
+    H->size = STOPWORDSUM;
+    H->data = (HashSW)malloc(sizeof(struct hashsw) * H->size);
+    if (H->data == NULL) {
+        printf("Fail to create a hash table for stopwords!\n");
+        exit(1);    
+    }
+
+    for (i = 0; i < H->size; i++) {
+        H->data[i]->info = Empty;
+    }
+
+    return H;
+}
+
+int FindHashSW(string stopword, HashTb H) {
+    int pos;
+    int collisionNum = 0;
+    pos = HashFunc(stopword, H->size);
+    while (H->data[pos]->info != Empty && strcmp(H->data[pos]->stopword, stopword)) {
+        pos += 2 * ++collisionNum - 1;  
+        if (pos >= H->size)        
+            pos -= H->size;     
+    }
+    return pos;  
+}
+
+void InsertHashSW(string stopword, HashTb H) {
+    int pos;
+    pos = FindHashSW(stopword, H);
+    if (H->TheCells[pos]->info != Legitimate)  
+    {
+        H->TheCells[pos]->info = Legitimate;
+        strcpy(H->TheCells[pos]->stopword, stopword);
+    }
+}
+
+int HashFunc(string stopword, int size) {
+    unsigned int val = 0;
+    while (*stopword != '\0')
+        val = (val << 5) + *stopword++;
+    return val % size;
 }
 
 int cmpData(const void * a, const void * b) {

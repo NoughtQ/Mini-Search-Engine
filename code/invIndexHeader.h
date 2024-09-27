@@ -14,7 +14,10 @@
 #define MAXWORDLEN 31
 #define MAXDOCSUM 500000
 #define MAXREADSTRLEN 101
+#define STOPWORDSUM 200
 #define TESTMODE true
+
+enum Kind {Legitimate, Empty, Deleted};
 
 typedef char * string;
 typedef struct data * Data;
@@ -23,6 +26,8 @@ typedef struct nodebp * BplusTree;
 typedef struct poslist * PosList;
 typedef struct posdata * PosData;
 typedef struct queuebp * QueueBP;
+typedef struct hashtb * HashTb;
+typedef struct hashsw * HashSW;
 
 extern string docNames[MAXDOCSUM];
 
@@ -32,8 +37,6 @@ struct nodebp {
     int childrenSize;
 
     string term[ORDER + 1];
-    int time[ORDER + 1];
-    // DocList docpos[ORDER + 1];
     Data data[ORDER + 1];
 
     NodeBP children[ORDER + 1];
@@ -54,6 +57,7 @@ struct poslist {
 
 struct posdata {
     int pos;
+    int time;
     PosData next;
 };
 
@@ -63,6 +67,16 @@ struct queuebp {
     int rear;
     NodeBP data[SIZE];
 };
+
+struct hashtb {
+    int size;
+    HashSW data[STOPWORDSUM];
+};
+
+struct hashsw {
+    string stopword;
+    enum Kind info;
+}
 
 
 BplusTree InvertedIndex(bool isTest = false);
@@ -82,8 +96,15 @@ QueueBP CreateQueueBP();
 void EnqueueBP(NodeBP nodebp, QueueBP Q);
 NodeBP DequeueBP(QueueBP Q);
 
-void EnqueuePD(int pos, PosList L);
-int * RetrievePD(PosList L);
+PosList CreatePL();
+void EnqueuePL(int pos, PosList L);
+int ** RetrievePL(PosList L);
+
+HashTb GenerateHashTb();
+HashTb InitHashTb();
+int FindHashSW(string stopword, HashTb H);
+void InsertHashSW(string stopword, HashTb H);
+int HashFunc(string stopword, int size);
 
 int cmpData(const void * a, const void * b);
 int cmpNodeBP(const void * a, const void * b);

@@ -10,7 +10,7 @@
 int main(int argc, char * argv[]) {
     int i;
     bool isTest = false;
-    bool noPrint = false;
+    bool Print = false;
     bool isFound;
     int findCnt = 0;
     char * pos;
@@ -34,8 +34,8 @@ int main(int argc, char * argv[]) {
             } else {
                 findCnt = 1;
             }
-        } else if (!strcmp(argv[i], "--noprint") || !strcmp(argv[i], "-np")) {
-            noPrint = true;
+        } else if (!strcmp(argv[i], "--print") || !strcmp(argv[i], "-p")) {
+            Print = true;
         } else {
             printf("Wrong Parameter!\n");
             exit(1);
@@ -46,7 +46,7 @@ int main(int argc, char * argv[]) {
         InvIndex = InvertedIndex();
     }
 
-    if (!noPrint) {
+    if (Print) {
         PrintBPTree(InvIndex);
     }
 
