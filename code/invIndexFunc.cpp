@@ -15,62 +15,90 @@ extern "C" {
 }
 
 namespace fs = std::filesystem;
-std::wstring chararrToWstring(char * st);
-char * wstringToChararr(std::wstring wst);
+
 
 string docNames[MAXDOCSUM];
 
-BplusTree InvertedIndex() {
-    char path[MAXREADSTRLEN];
+BplusTree InvertedIndex(bool isTest) {
+    char dir[MAXREADSTRLEN];
+    char fname[MAXREADSTRLEN];
     BplusTree InvIndex = CreateBP();
 
-    askforDirPath(path);
-    fileTraversaler(InvIndex, path);
+    askforFilePos(dir, fname, isTest);
+    InvIndex = fileTraversaler(InvIndex, dir, fname, isTest);
+    printf("Build successfully!\n");
 
     return InvIndex;
 }
 
-void askforDirPath(char * path) {
-    // char path[MAXREADSTRLEN];
-    printf("Task 2: Build an inverted Index:\n");
-    printf("Please input the path of the documents:\nPath: ");
-    scanf("%s", path);
-}
-
-void fileTraversaler(BplusTree T, char * path) {
-    int docCnt = 0;
-    char * wholePath;
-    FILE * fp = NULL;
-    fs::path dirPath(path);
-    
-    if (fs::exists(dirPath) && fs::is_directory(dirPath)) {
-        for (const auto& entry : fs::directory_iterator(dirPath)) {
-            if (fs::is_regular_file(entry)) {
-                std::string filename = entry.path().filename().string();
-                // std::cout << filename << std::endl;
-                // docNames[docCnt] = (string)malloc(sizeof(char) * (filename.length() + 1));
-                docNames[docCnt] = new char[filename.length() + 1]; 
-                strcpy(docNames[docCnt], filename.c_str());
-                wholePath = new char[MAXREADSTRLEN]; 
-                strcpy(wholePath, (dirPath.string() + "/" + filename).c_str());
-                fp = fopen(wholePath, "r");
-            
-                if (!fp) {
-                    printf("Couldn't open the file!\n");
-                    break;
-                }
-                GenerateInvertedIndex(T, docCnt++, fp);
-            }
-        }
-        if (fp)
-            fclose(fp);
+void askforFilePos(char * dir, char * fname, bool isTest) {
+    if (isTest) {
+        printf("Now testing the correctness of inverted Index:\n");
+        printf("Please input the name of the input sample file:\nName: ");
+        scanf("%s", fname);
     } else {
-        perror("Could not open directory");
+        printf("Now building an inverted Index:\n");
+        printf("Please input the directory of the documents:\nPath: ");
+        scanf("%s", dir);
     }
 }
 
+BplusTree fileTraversaler(BplusTree T, char * dir, char * fname, bool isTest) {
+    int docCnt = 0;
+    char * wholePath;
+    FILE * fp = NULL;
 
-void GenerateInvertedIndex(BplusTree T, int docCnt, FILE * fp) {
+    wholePath = new char[MAXREADSTRLEN];
+    if (!isTest) {
+        fs::path dirPath(dir);
+        if (fs::exists(dirPath) && fs::is_directory(dirPath)) {
+            for (const auto& entry : fs::directory_iterator(dirPath)) {
+                if (fs::is_regular_file(entry)) {
+                    std::string filename = entry.path().filename().string();
+                    // std::cout << filename << std::endl;
+                    docNames[docCnt] = new char[filename.length() + 1]; 
+                    strcpy(docNames[docCnt], filename.c_str());
+                    strcpy(wholePath, (dirPath.string() + "/" + filename).c_str());
+                    
+                    fp = fopen(wholePath, "r");
+                    if (!fp) {
+                        printf("Couldn't open the file!\n");
+                        exit(1);
+                    }
+
+                    T = GenerateInvertedIndex(T, docCnt++, fp);
+                }
+            }
+            if (fp)
+                fclose(fp);
+        } else {
+            perror("Could not open directory");
+            
+        }
+    } else {
+        strcpy(dir, "tests");
+        std::string sdir(dir);
+        std::string sfname(fname);
+        strcpy(wholePath, (sdir + "/" + sfname).c_str());
+        // printf("The whole path: %s\n", wholePath);
+
+        docNames[docCnt] = (string)malloc(sizeof(char) * (strlen(fname) + 1));
+        strcpy(docNames[docCnt], fname);
+
+        fp = fopen(wholePath, "r");
+        if (!fp) {
+            printf("Couldn't open the file!\n");
+            exit(1);
+        }
+        
+        T = GenerateInvertedIndex(T, docCnt++, fp);   
+        fclose(fp);
+    }
+
+    return T;
+}
+
+BplusTree GenerateInvertedIndex(BplusTree T, int docCnt, FILE * fp) {
     int i;
     int pre, cur;
     char tmp[MAXREADSTRLEN];
@@ -80,12 +108,13 @@ void GenerateInvertedIndex(BplusTree T, int docCnt, FILE * fp) {
     std::wstring term_wstr;
     stemming::english_stem<> StemEnglish;
 
-    while (fgets(tmp, MAXREADSTRLEN, fp) != NULL) {
+    while (fgets(tmp, MAXREADSTRLEN - 1, fp) != NULL) {
         pre = cur = 0;
+        // tmp[strlen(tmp)] = '\n';
         for (i = 0; i < strlen(tmp); i++) {
             if (!isalpha(tmp[i])) {
                 cur = i;
-                if (cur - pre > 1) {
+                if (cur > pre) {
                     term = (char *)malloc(sizeof(char) * (cur - pre + 1));
                     strncpy(term, tmp + pre, cur - pre);
                     term[cur - pre] = '\0';
@@ -95,32 +124,35 @@ void GenerateInvertedIndex(BplusTree T, int docCnt, FILE * fp) {
                     term = wstringToChararr(term_wstr);
                     
                     isDuplicated = false;
-                    nodebp = FindBP(term, T, &isDuplicated);
+                    nodebp = FindBP(term, docCnt, T, &isDuplicated);
                     if (!isDuplicated) {
-                        InsertBP(term, nodebp, T);
+                        T = InsertBP(term, docCnt, nodebp, T);
                     }      
                 }
 
-                pre = cur;
+                pre = cur + 1;
             }
         }
 
-        // if (cur != i - 1) {
-        //     term = (char *)malloc(sizeof(char) * (cur - pre + 1));
-        //     strncpy(term, tmp + pre, cur - pre);
-        //     term[cur - pre] = '\0';
+        if (!cur || pre > cur && pre != i) {
+            cur = i;
+            term = (char *)malloc(sizeof(char) * (cur - pre + 1));
+            strncpy(term, tmp + pre, cur - pre);
+            term[cur - pre] = '\0';
 
-        //     term_wstr = chararrToWstring(term);
-        //     StemEnglish(term_wstr);
-        //     term = wstringToChararr(term_wstr);
+            term_wstr = chararrToWstring(term);
+            StemEnglish(term_wstr);
+            term = wstringToChararr(term_wstr);
             
-        //     isDuplicated = false;
-        //     nodebp = FindBP(term, T, &isDuplicated);
-        //     if (!isDuplicated) {
-        //         InsertBP(term, nodebp, T);
-        //     }               
-        // }     
+            isDuplicated = false;
+            nodebp = FindBP(term, docCnt, T, &isDuplicated);
+            if (!isDuplicated) {
+                T = InsertBP(term, docCnt, nodebp, T);
+            }               
+        }     
     }
+
+    return T;
 }
 
 
@@ -132,17 +164,16 @@ BplusTree CreateBP() {
     }
 
     int i;
-    // T->term = (int *)malloc(sizeof(int) * (ORDER + 1));
-    // for (i = 0; i <= ORDER; i++) {
-    //     T->term[i] = (string)malloc(sizeof(char) * MAXWORDLEN);
-    // }
     
     for (i = 0; i <= ORDER; i++) {
-        // T->docpos[i] = (DocList)malloc(sizeof(struct doclist));
-        // T->docpos[i]->pos = -1;
-        // T->docpos[i]->next = NULL;
-        T->time[i] = 0;
-        T->term[i] = (string)malloc(sizeof(char) * MAXWORDLEN);
+        T->data[i] = (Data)malloc(sizeof(struct data));
+        T->data[i]->term = (string)malloc(sizeof(char) * MAXWORDLEN);
+        T->data[i]->poslist = (PosList)malloc(sizeof(struct poslist));
+        T->data[i]->poslist->size = 0;
+        T->data[i]->poslist->front = (PosData)malloc(sizeof(struct posdata));
+        T->data[i]->poslist->rear = (PosData)malloc(sizeof(struct posdata));
+        T->data[i]->poslist->front = T->data[i]->poslist->rear;
+
         T->children[i] = (NodeBP)malloc(sizeof(struct nodebp));
     }
 
@@ -153,21 +184,20 @@ BplusTree CreateBP() {
     return T;
 }
 
-NodeBP FindBP(string x, BplusTree T, bool * flag) {
+NodeBP FindBP(string term, int docCnt, BplusTree T, bool * flag, bool isSearch) {
     int i;
 
     if (!T) {
         return T;
     } else if (!T->childrenSize) {
-        isSameTerm(x, T, flag);
+        isSameTerm(term, docCnt, T, flag, isSearch);
         return T;
     }
-
 
     int pos = -1;
     
     for (i = 0; i < T->size; i++) {
-        if (strcmp(x, T->term[i]) < 0) {
+        if (strcmp(term, T->data[i]->term) < 0) {
             pos = i;
             break;
         }
@@ -176,42 +206,67 @@ NodeBP FindBP(string x, BplusTree T, bool * flag) {
         pos = i;
     }
 
-    return FindBP(x, T->children[pos], flag);
+    return FindBP(term, docCnt, T->children[pos], flag, isSearch);
 }
 
-void isSameTerm(string term, NodeBP nodebp, bool * flag) {
+void isSameTerm(string term, int docCnt, NodeBP nodebp, bool * flag, bool isSearch) {
     int i;
-    // DocList tmp;
 
     if (nodebp->size) {
         for (i = 0; i < nodebp->size; i++) {
-            if (!strcmp(term, nodebp->term[i])) {
-                nodebp->time[i]++;
-                
-                // tmp = (DocList)malloc(sizeof(struct doclist));
-                // tmp->pos = 
+            if (!strcmp(term, nodebp->data[i]->term)) {
+                if (!isSearch) {
+                    // nodebp->data[i]->time++;
+                    EnqueuePD(docCnt, nodebp->data[i]->poslist);
+                } else {
+                    int size = nodebp->data[i]->poslist->size;
+                    printf("Successfully find the word!\n");
+                    printf("Frequency: %d\n", size);
+                    printf("The word was found in files below:\n");
+                    
+                    // PosData cur = nodebp->data[i]->poslist->front->next;
+                    // int abspos = 0;
+                    int j;
+                    int * posArr = (int *)malloc(sizeof(int) * size);
+
+                    posArr = RetrievePD(nodebp->data[i]->poslist);
+
+                    for (j = 0; j < size; j++) {
+                        // abspos += posArr[j];
+                        printf("%s\n", docNames[posArr[j]]);
+                    }
+                    printf("-----------------------------------\n");
+
+                    // while (cur != NULL) {
+                    //     abspos += cur->pos;
+                    //     printf("%s\n", docNames[abspos]);
+                    //     cur = cur->next;
+                    // }
+                }
 
                 *flag = true;
                 break;
             }
         }
     }
-
 }
 
-void InsertBP(string x, NodeBP nodebp, BplusTree Tree) {
+BplusTree InsertBP(string term, int docCnt, NodeBP nodebp, BplusTree Tree) {
     int i;
 
-    strcpy(nodebp->term[nodebp->size++], x);
-    qsort(nodebp->term, nodebp->size, sizeof(nodebp->term[0]), cmpData);
+    strcpy(nodebp->data[nodebp->size]->term, term);
+    // nodebp->data[nodebp->size++]->time++;
+    EnqueuePD(docCnt, nodebp->data[nodebp->size++]->poslist);
+    qsort(nodebp->data, nodebp->size, sizeof(nodebp->data[0]), cmpData);
 
-    SplitBP(nodebp, Tree);
+    Tree = SplitBP(nodebp, Tree);
+    return Tree;
 }
 
-void SplitBP(NodeBP nodebp, BplusTree Tree) {
+BplusTree SplitBP(NodeBP nodebp, BplusTree Tree) {
     if (!nodebp->childrenSize && nodebp->size <= ORDER 
       || nodebp->childrenSize && nodebp->size < ORDER) {
-        return;
+        return Tree;
     }
 
     NodeBP lnodebp, rnodebp, tmpNodeBP, parent;
@@ -234,12 +289,14 @@ void SplitBP(NodeBP nodebp, BplusTree Tree) {
         cut = LEAFCUT;
         
         for (i = 0; i < cut; i++) {
-            strcpy(lnodebp->term[i], nodebp->term[i]);
+            // strcpy(lnodebp->data[i]->term, nodebp->data[i]->term);
+            lnodebp->data[i] = nodebp->data[i];
         }
         lnodebp->size = cut;
 
         for (j = cut; j < nodebp->size; j++) {
-            strcpy(rnodebp->term[j - cut], nodebp->term[j]);
+            // strcpy(rnodebp->data[j - cut]->term nodebp->data[j]->term);
+            rnodebp->data[j - cut] = nodebp->data[j];
         }
         rnodebp->size = nodebp->size - cut;
 
@@ -248,7 +305,8 @@ void SplitBP(NodeBP nodebp, BplusTree Tree) {
 
         for (i = 0; i <= cut; i++) {
             if (i != cut) 
-                strcpy(lnodebp->term[i], nodebp->term[i]);
+                lnodebp->data[i] = nodebp->data[i];
+                // strcpy(lnodebp->data[i]->term, nodebp->data[i]->term);
             lnodebp->children[i] = nodebp->children[i];
             lnodebp->children[i]->parent = lnodebp;
         }
@@ -256,7 +314,8 @@ void SplitBP(NodeBP nodebp, BplusTree Tree) {
         lnodebp->childrenSize = cut + 1;
 
         for (j = cut + 1; j < nodebp->size; j++) {
-            strcpy(rnodebp->term[j - cut - 1], nodebp->term[j]);
+            rnodebp->data[j - cut - 1] = nodebp->data[j];
+            // strcpy(rnodebp->data[j - cut - 1]->term, nodebp->data[j]->term);
         }
         for (j = cut + 1; j < nodebp->childrenSize; j++) {
             rnodebp->children[j - cut - 1] = nodebp->children[j];
@@ -266,7 +325,8 @@ void SplitBP(NodeBP nodebp, BplusTree Tree) {
         rnodebp->childrenSize = nodebp->childrenSize - cut - 1;
     }
 
-    strcpy(parent->term[parent->size++], nodebp->term[cut]);
+    // strcpy(parent->data[parent->size++]->term, nodebp->data[cut]->term);
+    parent->data[parent->size++] = nodebp->data[cut];
     if (parent->childrenSize) {
         for (i = 0; i < parent->childrenSize; i++) {
             if (parent->children[i] == nodebp) {
@@ -279,12 +339,14 @@ void SplitBP(NodeBP nodebp, BplusTree Tree) {
     }
     parent->children[parent->childrenSize++] = rnodebp;
 
-    qsort(parent->term, parent->size, sizeof(parent->term[0]), cmpData);
+    qsort(parent->data, parent->size, sizeof(parent->data[0]), cmpData);
     qsort(parent->children, parent->childrenSize, sizeof(parent->children[0]), cmpNodeBP);
 
     free(nodebp);
 
-    SplitBP(parent, Tree);
+    Tree = SplitBP(parent, Tree);
+
+    return Tree;
 }
 
 void PrintBPTree(BplusTree T) {
@@ -308,9 +370,9 @@ void PrintBPTree(BplusTree T) {
             printf("[");
             for (i = 0; i < nodebp->size; i++) {
                 if (!i) {
-                    printf("%s", nodebp->term[i]);
+                    printf("%s", nodebp->data[i]->term);
                 } else {
-                    printf(", %s", nodebp->term[i]);
+                    printf(", %s", nodebp->data[i]->term);
                 }
             }
             printf("]");
@@ -335,28 +397,68 @@ QueueBP CreateQueueBP() {
 }
 
 void EnqueueBP(NodeBP nodebp, QueueBP Q) {
-    Q->term[Q->rear++] = nodebp;
+    if (Q->size >= SIZE) {
+        printf("Full B+-tree-item queue!\n");
+        exit(1);
+    }
+    Q->data[Q->rear++] = nodebp;
     Q->size++;
 }
 
 NodeBP DequeueBP(QueueBP Q) {
-    NodeBP returnNodeBP = Q->term[Q->front++];
+    if (!Q->size) {
+        printf("Empty B+-tree-item queue!\n");
+        exit(1);
+    }
+    NodeBP returnNodeBP = Q->data[Q->front++];
     Q->size--;
     return returnNodeBP;
 }
 
-int cmpData(const void * a, const void * b) {
-    const string termA = *(const string*)a;
-    const string termB = *(const string*)b;
+void EnqueuePD(int pos, PosList L) {
+    PosData tmp = (PosData)malloc(sizeof(struct posdata));
+    if (!tmp) {
+        printf("Fail to create a new position data!\n");
+        exit(1);
+    }
 
-    return strcmp(termA, termB);
+    tmp->pos = pos;
+    tmp->next = L->rear->next;
+    L->rear->next = tmp;
+    L->rear = tmp;
+    L->size++;
+}
+
+int * RetrievePD(PosList L) {
+    if (!L->size) {
+        printf("Empty position-data queue!\n");
+        exit(1);
+    }
+
+    int i = 0;
+    int * posArr = (int *)malloc(sizeof(int) * L->size);
+    PosData cur = L->front->next;
+
+    while (cur != NULL) {
+        posArr[i++] = cur->pos;
+        cur = cur->next;
+    }
+
+    return posArr;
+}
+
+int cmpData(const void * a, const void * b) {
+    const Data dataA = *(const Data*)a;
+    const Data dataB = *(const Data*)b;
+
+    return strcmp(dataA->term, dataB->term);
 }
 
 int cmpNodeBP(const void * a, const void * b) {
     const NodeBP nodebpA = *(const NodeBP*)a;
     const NodeBP nodebpB = *(const NodeBP*)b;
 
-    return nodebpA->term[0] - nodebpB->term[0];
+    return strcmp(nodebpA->data[0]->term, nodebpB->data[0]->term);
 }
 
 std::wstring chararrToWstring(char * st) {
