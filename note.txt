@@ -1,0 +1,28 @@
+struct nodebp {
+    int size;
+    int childrenSize;
+
+    string term[ORDER + 1];
+    int time[ORDER + 1];
+    // DocList docpos[ORDER + 1];
+    Data data[ORDER + 1];
+
+    NodeBP children[ORDER + 1];
+    NodeBP parent;
+};
+
+struct data {
+    string term;
+    PosList poslist;
+};
+
+struct poslist {
+    int size;
+    PosData front;
+    PosData rear;
+};
+
+struct posdata {
+    int pos;
+    PosData next;
+};
