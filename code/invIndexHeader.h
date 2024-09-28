@@ -3,11 +3,12 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string>
+#include <time.h>
 
 #ifndef INVINDEX_H
 #define INVINDEX_H   // In case of re-inclusion of this header file
 
-#define ORDER 3
+#define ORDER 4
 #define LEAFCUT (ORDER / 2 + 1)
 #define NONLEAFCUT (ORDER / 2)
 #define SIZE 1000000
@@ -16,8 +17,9 @@
 #define MAXREADSTRLEN 101
 #define STOPWORDSUM 200
 #define TESTMODE true
+#define STOPWORDPATH "stop_words.txt"
 
-enum Kind {Legitimate, Empty, Deleted};
+enum Kind {Legitimate, Empty};
 
 typedef char * string;
 typedef struct data * Data;
@@ -76,14 +78,14 @@ struct hashtb {
 struct hashsw {
     string stopword;
     enum Kind info;
-}
+};
 
 
-BplusTree InvertedIndex(bool isTest = false);
+BplusTree InvertedIndex(bool isTest = false, bool containStopWords = false);
 void askforFilePos(char * dir, char * fname, bool isTest);
-BplusTree fileTraversaler(BplusTree T, char * dir, char * fname, bool isTest);
+BplusTree fileTraversaler(BplusTree T, char * dir, char * fname, bool isTest, bool containStopWords);
 
-BplusTree GenerateInvertedIndex(BplusTree T, int docCnt, FILE * fp);
+BplusTree GenerateInvertedIndex(BplusTree T, int docCnt, FILE * fp, bool containStopWords);
 
 BplusTree CreateBP();
 NodeBP FindBP(string term, int docCnt, BplusTree T, bool * flag, bool isSearch = false);
@@ -102,7 +104,7 @@ int ** RetrievePL(PosList L);
 
 HashTb GenerateHashTb();
 HashTb InitHashTb();
-int FindHashSW(string stopword, HashTb H);
+int FindHashSW(string stopword, HashTb H, bool justSearch);
 void InsertHashSW(string stopword, HashTb H);
 int HashFunc(string stopword, int size);
 
@@ -111,5 +113,7 @@ int cmpNodeBP(const void * a, const void * b);
 
 std::wstring chararrToWstring(char * st);
 char * wstringToChararr(std::wstring wst);
+
+void PrintTime(clock_t start, clock_t end);
 
 #endif 

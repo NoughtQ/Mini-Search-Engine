@@ -18,19 +18,18 @@ namespace fs = std::filesystem;
 
 string docNames[MAXDOCSUM];
 
-BplusTree InvertedIndex(bool isTest) {
+BplusTree InvertedIndex(bool isTest, bool containStopWords) {
     char dir[MAXREADSTRLEN];
     char fname[MAXREADSTRLEN];
     BplusTree InvIndex = CreateBP();
 
     askforFilePos(dir, fname, isTest);
-    InvIndex = fileTraversaler(InvIndex, dir, fname, isTest);
+    InvIndex = fileTraversaler(InvIndex, dir, fname, isTest, containStopWords);
     if (InvIndex->size) {
         printf("Build successfully!\n");
     } else {
         printf("Fail to build an inverted index!\n");
     }
-    
 
     return InvIndex;
 }
@@ -47,7 +46,7 @@ void askforFilePos(char * dir, char * fname, bool isTest) {
     }
 }
 
-BplusTree fileTraversaler(BplusTree T, char * dir, char * fname, bool isTest) {
+BplusTree fileTraversaler(BplusTree T, char * dir, char * fname, bool isTest, bool containStopWords) {
     int docCnt = 0;
     char * wholePath;
     FILE * fp = NULL;
@@ -69,7 +68,7 @@ BplusTree fileTraversaler(BplusTree T, char * dir, char * fname, bool isTest) {
                         exit(1);
                     }
 
-                    T = GenerateInvertedIndex(T, docCnt++, fp);
+                    T = GenerateInvertedIndex(T, docCnt++, fp, containStopWords);
                 }
             }
             if (fp)
@@ -94,22 +93,25 @@ BplusTree fileTraversaler(BplusTree T, char * dir, char * fname, bool isTest) {
             exit(1);
         }
         
-        T = GenerateInvertedIndex(T, docCnt++, fp);   
+        T = GenerateInvertedIndex(T, docCnt++, fp, containStopWords);   
         fclose(fp);
     }
 
     return T;
 }
 
-BplusTree GenerateInvertedIndex(BplusTree T, int docCnt, FILE * fp) {
+BplusTree GenerateInvertedIndex(BplusTree T, int docCnt, FILE * fp, bool containStopWords) {
     int i;
     int pre, cur;
     char tmp[MAXREADSTRLEN];
     char * term;
     bool isDuplicated;
     NodeBP nodebp;
+    HashTb H;
     std::wstring term_wstr;
     stemming::english_stem<> StemEnglish;
+
+    H = GenerateHashTb();
 
     while (fgets(tmp, MAXREADSTRLEN - 1, fp) != NULL) {
         pre = cur = 0;
@@ -120,6 +122,11 @@ BplusTree GenerateInvertedIndex(BplusTree T, int docCnt, FILE * fp) {
                     term = (char *)malloc(sizeof(char) * (cur - pre + 1));
                     strncpy(term, tmp + pre, cur - pre);
                     term[cur - pre] = '\0';
+
+                    if (!containStopWords && FindHashSW(term, H, true) >= 0) {
+                        pre = cur + 1;
+                        continue;
+                    }
 
                     term_wstr = chararrToWstring(term);
                     StemEnglish(term_wstr);
@@ -347,6 +354,8 @@ void PrintBPTree(BplusTree T) {
     NodeBP nodebp;
     QueueBP q;
 
+    printf("B+ Tree of Inverted Index:\n");
+
     q = CreateQueueBP();
     EnqueueBP(T, q);
     EnqueueBP(NULL, q);
@@ -468,12 +477,13 @@ HashTb GenerateHashTb() {
     int pre, cur;
     HashTb H;
     FILE * fp;
-    string fname;
+    char fname[MAXWORDLEN];
     char tmp[MAXREADSTRLEN];
+    char * term;
 
     H = InitHashTb();
 
-    strcpy(fname, "stop_words.txt");
+    strcpy(fname, STOPWORDPATH);
     fp = fopen(fname, "r");
     if (!fp) {
         printf("Fail to open the file of stopwords!\n");
@@ -490,7 +500,7 @@ HashTb GenerateHashTb() {
                     strncpy(term, tmp + pre, cur - pre);
                     term[cur - pre] = '\0';
 
-
+                    InsertHashSW(term, H);
                 }
 
                 pre = cur + 1;
@@ -499,19 +509,13 @@ HashTb GenerateHashTb() {
 
         if (!cur || pre > cur && pre != i) {
             cur = i;
+
             term = (char *)malloc(sizeof(char) * (cur - pre + 1));
             strncpy(term, tmp + pre, cur - pre);
             term[cur - pre] = '\0';
 
-            term_wstr = chararrToWstring(term);
-            StemEnglish(term_wstr);
-            term = wstringToChararr(term_wstr);
-            
-            isDuplicated = false;
-            nodebp = FindBP(term, docCnt, T, &isDuplicated);
-            if (!isDuplicated) {
-                T = InsertBP(term, docCnt, nodebp, T);
-            }               
+            InsertHashSW(term, H);
+                      
         }  
     }
 
@@ -525,28 +529,36 @@ HashTb InitHashTb() {
 
     H = (HashTb)malloc(sizeof(struct hashtb));
     if (H == NULL) {
-        printf("Fail to create a hash table for stopwords!"\n);
+        printf("Fail to create a hash table for stopwords!\n");
         exit(1);
     }
 
     H->size = STOPWORDSUM;
-    H->data = (HashSW)malloc(sizeof(struct hashsw) * H->size);
+    
     if (H->data == NULL) {
         printf("Fail to create a hash table for stopwords!\n");
         exit(1);    
     }
 
     for (i = 0; i < H->size; i++) {
+        H->data[i] = (HashSW)malloc(sizeof(hashsw));
+        H->data[i]->stopword = (string)malloc(sizeof(char) * MAXWORDLEN);
         H->data[i]->info = Empty;
     }
 
     return H;
 }
 
-int FindHashSW(string stopword, HashTb H) {
+int FindHashSW(string stopword, HashTb H, bool justSearch) {
     int pos;
     int collisionNum = 0;
     pos = HashFunc(stopword, H->size);
+
+
+    if (justSearch && (H->data[pos]->info == Empty || strcmp(H->data[pos]->stopword, stopword))) {
+        return -1;
+    }
+
     while (H->data[pos]->info != Empty && strcmp(H->data[pos]->stopword, stopword)) {
         pos += 2 * ++collisionNum - 1;  
         if (pos >= H->size)        
@@ -557,11 +569,11 @@ int FindHashSW(string stopword, HashTb H) {
 
 void InsertHashSW(string stopword, HashTb H) {
     int pos;
-    pos = FindHashSW(stopword, H);
-    if (H->TheCells[pos]->info != Legitimate)  
+    pos = FindHashSW(stopword, H, false);
+    if (H->data[pos]->info != Legitimate)  
     {
-        H->TheCells[pos]->info = Legitimate;
-        strcpy(H->TheCells[pos]->stopword, stopword);
+        H->data[pos]->info = Legitimate;
+        strcpy(H->data[pos]->stopword, stopword);
     }
 }
 
@@ -601,4 +613,14 @@ char * wstringToChararr(std::wstring wst) {
     strcpy(st, tmp.c_str());
 
     return st;
+}
+
+void PrintTime(clock_t start, clock_t end) {
+    clock_t tick;
+    double duration;
+
+    tick = end - start;
+    duration = ((double)(tick)) / CLOCKS_PER_SEC;
+    printf("Ticks: %lu\n", (long)tick);
+    printf("Duration: %.2fs\n", duration);
 }

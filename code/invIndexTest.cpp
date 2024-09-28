@@ -5,25 +5,28 @@
 #include <stdlib.h>
 #include <string.h>
 #include <string>
-
+#include <time.h>
 
 int main(int argc, char * argv[]) {
     int i;
     bool isTest = false;
     bool Print = false;
     bool isFound;
+    bool containStopWords = false;
+    bool timeRecord = false;
     int findCnt = 0;
     char * pos;
     char tmp[MAXWORDLEN];
     char * word;
+    double duration;
     std::wstring word_wstr;
     stemming::english_stem<> StemEnglish;
     BplusTree InvIndex;
+    clock_t start, end, tick;
 
     for (i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "--test") || !strcmp(argv[i], "-t")) {
             isTest = true;
-            InvIndex = InvertedIndex(TESTMODE);
         } else if (strstr(argv[i], "--find") || strstr(argv[i], "-f")) {
             if ((pos = strchr(argv[i], '='))) {
                 findCnt = atoi(pos + 1);
@@ -36,21 +39,31 @@ int main(int argc, char * argv[]) {
             }
         } else if (!strcmp(argv[i], "--print") || !strcmp(argv[i], "-p")) {
             Print = true;
+        } else if (!strcmp(argv[i], "--stopwords") || !strcmp(argv[i], "-sw")) {
+            containStopWords = true;
+        } else if (!strcmp(argv[i], "--time") || !strcmp(argv[i], "-tr")) {
+            timeRecord = true;
         } else {
             printf("Wrong Parameter!\n");
             exit(1);
         }
+    }
 
+    if (!timeRecord) {
+        InvIndex = InvertedIndex(isTest, containStopWords);
+    } else {
+        start = clock();
+        InvIndex = InvertedIndex(isTest, containStopWords);
+        end = clock();
+        PrintTime(start, end);
     }
-    if (!isTest) {
-        InvIndex = InvertedIndex();
-    }
+    
 
     if (Print) {
         PrintBPTree(InvIndex);
     }
 
-    if (findCnt) {
+    if (InvIndex->size && findCnt) {
         word = (char *)malloc(sizeof(char) * MAXWORDLEN);
         printf("\nFinding Words Mode(only supports single word finding):\n");
         for (i = 0; i < findCnt; i++) {
@@ -63,9 +76,17 @@ int main(int argc, char * argv[]) {
             StemEnglish(word_wstr);
             word = wstringToChararr(word_wstr);
 
-            FindBP(word, -1, InvIndex, &isFound, findCnt);
+            if (!timeRecord) {
+                FindBP(word, -1, InvIndex, &isFound, findCnt);
+            } else {
+                start = clock();
+                FindBP(word, -1, InvIndex, &isFound, findCnt);
+                end = clock();
+                PrintTime(start, end);              
+            }
+            
             if (!isFound) {
-                printf("Sorry, no such word here!\n");
+                printf("Sorry, no such word in the inverted index!\n");
                 printf("-----------------------------------\n");
             }
         }
