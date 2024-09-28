@@ -204,6 +204,7 @@
   
   if (table_of_contents) {
     set text(size: 15pt)
+    
     v(-1em)
     outline(
       title: text(1.3em, "Table of Content"),
@@ -222,10 +223,10 @@
     ],
     numbering: "1",
     number-align: center,
+    margin: (x: 60pt)
   )
 
   show outline: set heading(numbering: "1.")
-
 
   set par(justify: true)
   set heading(numbering: (..args) => {

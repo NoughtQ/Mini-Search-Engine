@@ -243,7 +243,7 @@ NodeBP FindBP(string term, int docCnt, BplusTree T, bool * flag, bool isSearch) 
     return FindBP(term, docCnt, T->children[pos], flag, isSearch);  // Continue finding in the children node
 }
 
-// Check if the term is in the B+ tree
+// Check if the term exists in the B+ tree
 // term: term
 // docCnt: the index of the document
 // nodebp: the appropriate node where the term may exists or will exists after insertion
