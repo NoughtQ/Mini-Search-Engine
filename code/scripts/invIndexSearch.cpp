@@ -55,7 +55,7 @@ void loadFileWordsNum(std::string filePath)
     std::cout << "The word count of every file loaded successfully." << std::endl;
 }
 
-void search(BplusTree T)
+void search(BplusTree T, int pageSize, double threshold)
 {
     std::cout << "Please enter your query:" << std::endl;
     std::string query;
@@ -86,6 +86,8 @@ void search(BplusTree T)
     sort(queryWord.begin(),queryWord.end(),[](const std::pair<std::wstring,double>& a, const std::pair<std::wstring,double>& b){return a.second < b.second;});
     
     // Search for documents that contain all the query words
+    int cntForDoc = 0;
+    int cntForWord = (int)(queryWord.size() * threshold);
     char * wordForSearch;
     if(queryWord.size() == 0)
     {
@@ -105,17 +107,23 @@ void search(BplusTree T)
             posVec = FindBP2(wordForSearch, -1, T);
             sort(posVec.begin(),posVec.end(),[](const std::pair<int,double>& a, const std::pair<int,double>& b){return a.second > b.second;});
             for(auto &pos : posVec)
+            {
+                if(cntForDoc == pageSize)
+                    break;
                 printf("%-25s\t%lf\n",docNames[pos.first],pos.second);
+                cntForDoc++;
+            }
         }
     }
     else
     {
         std::cout << "Your query has multiple valid words, so we will search for them in the inverted index." << std::endl;
         std::cout << "The words were found in files below:"<< std::endl;
-        int cnt = 0;
         std::unordered_map<int, int> freqMap;//ID,freq
         for(auto &p : queryWord)
         {
+            if(cntForWord == 0)
+                break;
             wordForSearch = wstringToChararr(p.first);
             auto currentPosVec = FindBP2(wordForSearch, -1, T);
             std::unordered_map<int, bool> currentDocIdMap;
@@ -134,6 +142,7 @@ void search(BplusTree T)
                         ++it;
                 }
             }
+            cntForWord--;
         }
         if(freqMap.size() == 0)
         {
@@ -148,8 +157,10 @@ void search(BplusTree T)
             std::sort(sortedFreqVec.begin(), sortedFreqVec.end(), [](const std::pair<int, double>& a, const std::pair<int, double>& b) {return a.second > b.second; });
             for(auto &p : sortedFreqVec)
             {
+                if(cntForDoc == pageSize)
+                    break;
                 printf("%-25s\t%lf\n",docNames[p.first],p.second);
-                cnt++;
+                cntForDoc++;
             }
 
         }

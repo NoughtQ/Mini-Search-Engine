@@ -13,9 +13,16 @@ int main()
     std::cout << "--------------------------------------------------"<< std::endl;
     //system("clear");
     std::cout << "\033[1mWelcome to ***ShakespeareFinder***\033[0m" << std::endl;
+    std::cout << "Please set the size of page:" << std::endl;
+    int pageSize;
+    std::cin >> pageSize;
+    std::cout << "Please set the threshold(0-1) of the query:" << std::endl;
+    double threshold;
+    std::cin >> threshold;
+    getchar();
 
     Searchbegin:
-    search(InvIndex);
+    search(InvIndex, pageSize, threshold);
     std::cout << "Do you want to search again? (y/n): ";
     char choice;
     std::cin >> choice;
