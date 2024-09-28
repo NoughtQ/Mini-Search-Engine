@@ -1,28 +1,8 @@
-struct nodebp {
-    int size;
-    int childrenSize;
-
-    string term[ORDER + 1];
-    int time[ORDER + 1];
-    // DocList docpos[ORDER + 1];
-    Data data[ORDER + 1];
-
-    NodeBP children[ORDER + 1];
-    NodeBP parent;
-};
-
-struct data {
-    string term;
-    PosList poslist;
-};
-
-struct poslist {
-    int size;
-    PosData front;
-    PosData rear;
-};
-
-struct posdata {
-    int pos;
-    PosData next;
-};
+for (j = 0; j < size; j++) {
+                        if (posArr[j][1] <= 1) 
+                            printf("%s: %d time\n", docNames[posArr[j][0]], posArr[j][1]);
+                        else
+                            printf("%s: %d times\n", docNames[posArr[j][0]], posArr[j][1]);
+                        cnt += posArr[j][1];
+                    }
+                    printf("Frequency: %d\n", cnt);

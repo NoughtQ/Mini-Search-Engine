@@ -3,11 +3,13 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string>
+#include <time.h>
+#include <vector>
 
 #ifndef INVINDEX_H
 #define INVINDEX_H   // In case of re-inclusion of this header file
 
-#define ORDER 3
+#define ORDER 4
 #define LEAFCUT (ORDER / 2 + 1)
 #define NONLEAFCUT (ORDER / 2)
 #define SIZE 1000000
@@ -16,8 +18,11 @@
 #define MAXREADSTRLEN 101
 #define STOPWORDSUM 200
 #define TESTMODE true
+#define STOPWORDPATH "../source/stop_words.txt"
+#define WORDCOUNTPATH "../source/word_count.txt"
+#define SHAKSPEAREDIR "../source/shakespeare_works"
 
-enum Kind {Legitimate, Empty, Deleted};
+enum Kind {Legitimate, Empty};
 
 typedef char * string;
 typedef struct data * Data;
@@ -29,14 +34,14 @@ typedef struct queuebp * QueueBP;
 typedef struct hashtb * HashTb;
 typedef struct hashsw * HashSW;
 
-extern std::string docNames[MAXDOCSUM];
+extern string docNames[MAXDOCSUM];
 
 
 struct nodebp {
     int size;
     int childrenSize;
 
-    std::string term[ORDER + 1];
+    string term[ORDER + 1];
     Data data[ORDER + 1];
 
     NodeBP children[ORDER + 1];
@@ -45,7 +50,7 @@ struct nodebp {
 
 
 struct data {
-    std::string term;
+    string term;
     PosList poslist;
 };
 
@@ -74,26 +79,21 @@ struct hashtb {
 };
 
 struct hashsw {
-    std::string stopword;
+    string stopword;
     enum Kind info;
 };
 
-extern unordered_map<wstring, int> wordFreq;
-extern unordered_map<wstring, int> stopWords;
-extern vector<pair<wstring,int>> queryWord;
-extern stemming::english_stem<> StemEnglish;
 
-
-BplusTree InvertedIndex(bool isTest = false);
+BplusTree InvertedIndex(bool isTest = false, bool containStopWords = false);
 void askforFilePos(char * dir, char * fname, bool isTest);
-BplusTree fileTraversaler(BplusTree T, char * dir, char * fname, bool isTest);
+BplusTree fileTraversaler(BplusTree T, char * dir, char * fname, bool isTest, bool containStopWords);
 
-BplusTree GenerateInvertedIndex(BplusTree T, int docCnt, FILE * fp);
+BplusTree GenerateInvertedIndex(BplusTree T, int docCnt, FILE * fp, bool containStopWords);
 
 BplusTree CreateBP();
-NodeBP FindBP(std::string term, int docCnt, BplusTree T, bool * flag, bool isSearch = false);
-void isSameTerm(std::string term, int docCnt, NodeBP nodebp, bool * flag, bool isSearch = false);
-BplusTree InsertBP(std::string term, int docCnt, NodeBP nodebp, BplusTree Tree);
+NodeBP FindBP(string term, int docCnt, BplusTree T, bool * flag, bool isSearch = false);
+void isSameTerm(string term, int docCnt, NodeBP nodebp, bool * flag, bool isSearch = false);
+BplusTree InsertBP(string term, int docCnt, NodeBP nodebp, BplusTree Tree);
 BplusTree SplitBP(NodeBP nodebp, BplusTree Tree);
 void PrintBPTree(BplusTree T);
 
@@ -107,9 +107,9 @@ int ** RetrievePL(PosList L);
 
 HashTb GenerateHashTb();
 HashTb InitHashTb();
-int FindHashSW(std::string stopword, HashTb H);
-void InsertHashSW(std::string stopword, HashTb H);
-int HashFunc(std::string stopword, int size);
+int FindHashSW(string stopword, HashTb H, bool justSearch);
+void InsertHashSW(string stopword, HashTb H);
+int HashFunc(string stopword, int size);
 
 int cmpData(const void * a, const void * b);
 int cmpNodeBP(const void * a, const void * b);
@@ -117,8 +117,12 @@ int cmpNodeBP(const void * a, const void * b);
 std::wstring chararrToWstring(char * st);
 char * wstringToChararr(std::wstring wst);
 
+void PrintTime(clock_t start, clock_t end);
+
 void loadWordFreq(std::string filePath);
-void loadStopWords(std::string filePath);
 void search(BplusTree T);
+std::vector<std::pair<int,int>> FindBP2(string term, int docCnt, BplusTree T) ;
+std::vector<std::pair<int,int>> isSameTerm2(string term, int docCnt, NodeBP nodebp) ;
+std::vector<std::pair<int,int>> RetrievePL2(PosList L) ;
 
 #endif 
