@@ -5,7 +5,8 @@
 int main()
 {
     std::cout << "Please wait for resources to load and inverted index to be established..."<<std::endl;
-    loadWordFreq(WORDCOUNTPATH);
+    loadWordIdf(WORDDOCSPATH);
+    loadFileWordsNum(FILEWORDCOUNTPATH);
     BplusTree InvIndex = CreateBP();
     InvIndex = fileTraversaler(InvIndex, (char *)SHAKSPEAREDIR, (char *)"", false, true);
     std::cout << "Inverted Index has been established successfully!"<<std::endl;

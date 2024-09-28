@@ -16,11 +16,12 @@
 #define MAXWORDLEN 31
 #define MAXDOCSUM 500000
 #define MAXREADSTRLEN 101
-#define STOPWORDSUM 200
+#define STOPWORDSUM 300
 #define TESTMODE true
-#define STOPWORDPATH "../source/stop_words.txt"
-#define WORDCOUNTPATH "../source/word_count.txt"
+#define FILEWORDCOUNTPATH "../source/file_word_count.txt"
+#define WORDDOCSPATH "../source/word_docs.txt"
 #define SHAKSPEAREDIR "../source/shakespeare_works"
+#define STOPWORDPATH "../source/stop_words.txt"
 
 enum Kind {Legitimate, Empty};
 
@@ -119,10 +120,11 @@ char * wstringToChararr(std::wstring wst);
 
 void PrintTime(clock_t start, clock_t end);
 
-void loadWordFreq(std::string filePath);
+void loadWordIdf(std::string filePath);
+void loadFileWordsNum(std::string filePath);
 void search(BplusTree T);
-std::vector<std::pair<int,int>> FindBP2(string term, int docCnt, BplusTree T) ;
-std::vector<std::pair<int,int>> isSameTerm2(string term, int docCnt, NodeBP nodebp) ;
-std::vector<std::pair<int,int>> RetrievePL2(PosList L) ;
+std::vector<std::pair<int,double>> FindBP2(string term, int docCnt, BplusTree T) ;
+std::vector<std::pair<int,double>> isSameTerm2(string term, int docCnt, NodeBP nodebp) ;
+std::vector<std::pair<int,double>> RetrievePL2(PosList L) ;
 
 #endif 

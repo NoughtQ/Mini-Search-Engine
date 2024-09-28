@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <string>
 #include <string.h>
@@ -6,19 +7,23 @@
 #include <unordered_map>
 #include <algorithm>
 #include <cctype>
+#include <cmath>
 #include "wordStem/english_stem.h"
 #include "invIndexHeader.h"
 
-std::unordered_map<std::wstring, int> wordFreq;
-std::unordered_map<std::wstring, int> stopWords;
-std::vector<std::pair<std::wstring,int>> queryWord;
+#define DOCTOTALNUM 1115
+
+std::unordered_map<std::wstring, double> wordIdf;
+std::unordered_map<int, int> fileWordsNum;
+std::vector<std::pair<std::wstring,double>> queryWord;
 stemming::english_stem<> StemEnglish;
 
-void loadWordFreq(std::string filePath)
+void loadWordIdf(std::string filePath)
 {
     std::wifstream infile;
     std::wstring word;
     int freq;
+    double idf;
     infile.open(filePath,std::ios::in);
     if(!infile.is_open())
     {
@@ -26,15 +31,35 @@ void loadWordFreq(std::string filePath)
         return;
     }
     while(infile >> word >> freq)
-        wordFreq[word] = freq;
-    std::cout << "Word frequency loaded successfully." << std::endl;
+    {
+        idf = log(1115.0/(double)(1+freq));
+        wordIdf[word] = idf;
+    }
+    std::cout << "Word Idf loaded successfully." << std::endl;
+}
+
+void loadFileWordsNum(std::string filePath)
+{
+    std::wifstream infile;
+    std::wstring filename;
+    int num;
+    int cnt = 0;
+    infile.open(filePath,std::ios::in);
+    if(!infile.is_open())
+    {
+        std::cout << "Error: unable to open file " << filePath << std::endl;
+        return;
+    }
+    while(infile >> filename >> num)
+        fileWordsNum[cnt++] = num;
+    std::cout << "The word count of every file loaded successfully." << std::endl;
 }
 
 void search(BplusTree T)
 {
     std::cout << "Please enter your query:" << std::endl;
     std::string query;
-    std::vector<std::pair<int, int>> docList;
+    std::vector<std::pair<int,double>> docList;//docId,tf-idf
 
     // Read query from user
     std::getline(std::cin,query);
@@ -49,19 +74,18 @@ void search(BplusTree T)
         {
             std::wstring tmp = word;
             StemEnglish(word);
-            auto it = wordFreq.find(word);
-            if(it == wordFreq.end())
+            auto it = wordIdf.find(word);
+            if(it == wordIdf.end())
                 std::wcout << L"\033[31mWarning: \033[0m" << tmp << L" is not in the inverted index and will be ignored." << std::endl;
             else
-                queryWord.push_back({word,wordFreq[word]});
+                queryWord.push_back({word,wordIdf[word]});
             //std::wcout << L"test Word: " << tmp << L" Stem: " << word << std::endl;
             word = L"";
         }
     }
-    sort(queryWord.begin(),queryWord.end(),[](const std::pair<std::wstring,int>& a, const std::pair<std::wstring,int>& b){return a.second < b.second;});
+    sort(queryWord.begin(),queryWord.end(),[](const std::pair<std::wstring,double>& a, const std::pair<std::wstring,double>& b){return a.second < b.second;});
     
     // Search for documents that contain all the query words
-    bool isFound;
     char * wordForSearch;
     if(queryWord.size() == 0)
     {
@@ -70,16 +94,18 @@ void search(BplusTree T)
     }
     else if(queryWord.size() == 1)
     {
-        std::vector<std::pair<int,int>> posVec;
+        //tf is enough
+        std::vector<std::pair<int,double>> posVec;
         std::cout << "Your query has only one valid word, so we will search for it in the inverted index." << std::endl;
         std::cout << "The word was found in files below:"<< std::endl;
+        printf("File name                \tTf\n");
         for(auto &p : queryWord)
         {
             wordForSearch = wstringToChararr(p.first);
             posVec = FindBP2(wordForSearch, -1, T);
-            sort(posVec.begin(),posVec.end(),[](const std::pair<int,int>& a, const std::pair<int,int>& b){return a.second > b.second;});
+            sort(posVec.begin(),posVec.end(),[](const std::pair<int,double>& a, const std::pair<int,double>& b){return a.second > b.second;});
             for(auto &pos : posVec)
-                std::cout << docNames[pos.first] << " " << pos.second << std::endl;
+                printf("%-25s\t%lf\n",docNames[pos.first],pos.second);
         }
     }
     else
@@ -96,7 +122,7 @@ void search(BplusTree T)
             for(auto &pos : currentPosVec)
             {
                 currentDocIdMap[pos.first] = true;
-                freqMap[pos.first] += pos.second;
+                freqMap[pos.first] += pos.second * p.second;
             }
             if(freqMap.size()>0)
             {
@@ -113,15 +139,16 @@ void search(BplusTree T)
         {
             std::cout << "Ops, your query is not in the inverted index, so there are no documents retrieved. " << std::endl;
             std::cout << "Please try again with different query." << std::endl;
+            printf("File name                \tTf-Idf\n");
             return;
         }
         else
         {
-            std::vector<std::pair<int, int>> sortedFreqVec(freqMap.begin(), freqMap.end());
-            std::sort(sortedFreqVec.begin(), sortedFreqVec.end(), [](const std::pair<int, int>& a, const std::pair<int, int>& b) {return a.second > b.second; });
+            std::vector<std::pair<int,double>> sortedFreqVec(freqMap.begin(), freqMap.end());
+            std::sort(sortedFreqVec.begin(), sortedFreqVec.end(), [](const std::pair<int, double>& a, const std::pair<int, double>& b) {return a.second > b.second; });
             for(auto &p : sortedFreqVec)
             {
-                std::cout << docNames[p.first] << std::endl;
+                printf("%-25s\t%lf\n",docNames[p.first],p.second);
                 cnt++;
             }
 
@@ -129,12 +156,13 @@ void search(BplusTree T)
     }
 }
 
-std::vector<std::pair<int,int>> FindBP2(string term, int docCnt, BplusTree T) 
+//return <word, tf>
+std::vector<std::pair<int,double>> FindBP2(string term, int docCnt, BplusTree T) 
 {
     int i;
 
     if (!T) 
-        return std::vector<std::pair<int, int>>(); 
+        return std::vector<std::pair<int,double>>(); 
     else if (!T->childrenSize) 
         return isSameTerm2(term, docCnt, T);
 
@@ -153,10 +181,10 @@ std::vector<std::pair<int,int>> FindBP2(string term, int docCnt, BplusTree T)
     return FindBP2(term, docCnt, T->children[pos]);
 }
 
-std::vector<std::pair<int,int>> isSameTerm2(string term, int docCnt, NodeBP nodebp) 
+std::vector<std::pair<int,double>> isSameTerm2(string term, int docCnt, NodeBP nodebp) 
 {
     int i;
-    std::vector<std::pair<int,int>> posVec;
+    std::vector<std::pair<int,double>> posVec;
 
     if (nodebp->size) 
     {
@@ -164,8 +192,6 @@ std::vector<std::pair<int,int>> isSameTerm2(string term, int docCnt, NodeBP node
             if (!strcmp(term, nodebp->data[i]->term)) 
             {
                 PosList poslist = nodebp->data[i]->poslist;
-                int size = poslist->size;
-                int cnt = 0;
                 posVec = RetrievePL2(poslist);
                 break;
             }
@@ -175,23 +201,23 @@ std::vector<std::pair<int,int>> isSameTerm2(string term, int docCnt, NodeBP node
 }
 
 
-std::vector<std::pair<int,int>> RetrievePL2(PosList L) 
+std::vector<std::pair<int,double>> RetrievePL2(PosList L) 
 {
     if (!L->size) {
         printf("Empty position-data queue!\n");
         exit(1);
     }
 
-    int i = 0, j;
+    double tf;
     
-    std::vector<std::pair<int,int>> posVec;
+    std::vector<std::pair<int,double>> posVec;
 
     PosData cur = L->front->next;
 
     while (cur != NULL) {
-        posVec.push_back({cur->pos,cur->time});
+        tf = (double)cur->time / (double)fileWordsNum[cur->pos];
+        posVec.push_back({cur->pos, tf});
         cur = cur->next;
-        i++;
     }
 
     return posVec;
