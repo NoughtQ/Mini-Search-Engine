@@ -19,7 +19,7 @@ def extract_all_text_to_txt(html_path, txt_path):
         txt_file.write(text_content)
 
 def extract_text_from_folder(folder_path,txt_path):
-    with open('txt_title.txt', 'w', encoding='utf-8') as title_file:
+    with open('code/source/txt_title.txt', 'w', encoding='utf-8') as title_file:
         for root, dirs, files in os.walk(folder_path):
             for file in files:
                 if file.endswith('.html'):
@@ -34,6 +34,7 @@ def extract_text_from_folder(folder_path,txt_path):
                     print(f"Text written to {write_path}\n")
 
 
-os.makedirs('shakespeare_works', exist_ok=True)
-folder_path = 'shakespeare-master'
-extract_text_from_folder(folder_path,'shakespeare_works')
+write_path = 'code/source/shakespeare_works'
+os.makedirs(write_path, exist_ok=True)
+folder_path = 'code/source/shakespeare-master'
+extract_text_from_folder(folder_path,write_path)
