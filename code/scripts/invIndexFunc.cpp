@@ -144,14 +144,14 @@ BplusTree UpdateInvertedIndex(BplusTree T, int docCnt, FILE * fp, bool containSt
                     strncpy(term, tmp + pre, cur - pre);
                     term[cur - pre] = '\0';   // Don't forget this step
 
+                    // Word stemming
+                    WordStem(term);
+
                     // If we consider the stop words(default) and assure the term is a stop word, 
                     if (!containStopWords && FindHashSW(term, H, true) >= 0) {
                         pre = cur + 1;
                         continue;  // then we should ignore it
                     }
-
-                    // Word stemming
-                    WordStem(term);
                     
                     isDuplicated = false;
                     nodebp = FindBP(term, docCnt, T, &isDuplicated);  // Find the appropriate position for the term
@@ -174,6 +174,12 @@ BplusTree UpdateInvertedIndex(BplusTree T, int docCnt, FILE * fp, bool containSt
 
             // Word stemming
             WordStem(term);
+
+            // If we consider the stop words(default) and assure the term is a stop word, 
+            if (!containStopWords && FindHashSW(term, H, true) >= 0) {
+                pre = cur + 1;
+                continue;  // then we should ignore it
+            }
             
             isDuplicated = false;
             nodebp = FindBP(term, docCnt, T, &isDuplicated); // Find the appropriate position for the term
@@ -615,15 +621,18 @@ int FindHashSW(string stopword, HashTb H, bool justSearch) {
     pos = HashFunc(stopword, H->size);    // Use hashing function first
 
     // If we just search a term in the hash table and assure it's not a stop word, then return
-    if (justSearch && (H->data[pos]->info == Empty || strcmp(H->data[pos]->stopword, stopword))) {
-        return -1;
-    }
+    // if (justSearch && (H->data[pos]->info == Empty || strcmp(H->data[pos]->stopword, stopword))) {
+    //     return -1;
+    // }
 
     // Collision occurs!
     while (H->data[pos]->info != Empty && strcmp(H->data[pos]->stopword, stopword)) {
         pos += 2 * ++collisionNum - 1;  // Quadratic probe
         if (pos >= H->size)        
-            pos -= H->size;     
+            pos -= H->size;
+        if (justSearch && H->data[pos]->info == Empty) {
+            return -1;
+        }
     }
     return pos;  
 }
