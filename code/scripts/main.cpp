@@ -7,19 +7,20 @@ int main()
     std::cout << "Please wait for resources to load and inverted index to be established..."<<std::endl;
     loadWordIdf(WORDDOCSPATH);
     loadFileWordsNum(FILEWORDCOUNTPATH);
+    loadStopWords(STOPWORDPATH);
     BplusTree InvIndex = CreateBP();
     InvIndex = fileTraversaler(InvIndex, (char *)SHAKSPEAREDIR, (char *)"", false, true);
     std::cout << "Inverted Index has been established successfully!"<<std::endl;
     std::cout << "--------------------------------------------------"<< std::endl;
     //system("clear");
     std::cout << "\033[1mWelcome to ***ShakespeareFinder***\033[0m" << std::endl;
-    std::cout << "Please set the size of page:" << std::endl;
-    int pageSize;
-    std::cin >> pageSize;
-    std::cout << "Please set the threshold(0-1) of the query:" << std::endl;
-    double threshold;
-    std::cin >> threshold;
-    getchar();
+    //std::cout << "Please set the size of page:" << std::endl;
+    int pageSize = 10;
+    //std::cin >> pageSize;
+    //std::cout << "Please set the threshold(0-1) of the query:" << std::endl;
+    double threshold = 0.8;
+    //std::cin >> threshold;
+    //getchar();
 
     Searchbegin:
     search(InvIndex, pageSize, threshold);

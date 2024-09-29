@@ -15,45 +15,9 @@
 
 std::unordered_map<std::wstring, double> wordIdf;
 std::unordered_map<int, int> fileWordsNum;
+std::unordered_map<std::wstring, bool> stopWords;
 std::vector<std::pair<std::wstring,double>> queryWord;
 stemming::english_stem<> StemEnglish;
-
-void loadWordIdf(std::string filePath)
-{
-    std::wifstream infile;
-    std::wstring word;
-    int freq;
-    double idf;
-    infile.open(filePath,std::ios::in);
-    if(!infile.is_open())
-    {
-        std::cout << "Error: unable to open file " << filePath << std::endl;
-        return;
-    }
-    while(infile >> word >> freq)
-    {
-        idf = log(1115.0/(double)(1+freq));
-        wordIdf[word] = idf;
-    }
-    std::cout << "Word Idf loaded successfully." << std::endl;
-}
-
-void loadFileWordsNum(std::string filePath)
-{
-    std::wifstream infile;
-    std::wstring filename;
-    int num;
-    int cnt = 0;
-    infile.open(filePath,std::ios::in);
-    if(!infile.is_open())
-    {
-        std::cout << "Error: unable to open file " << filePath << std::endl;
-        return;
-    }
-    while(infile >> filename >> num)
-        fileWordsNum[cnt++] = num;
-    std::cout << "The word count of every file loaded successfully." << std::endl;
-}
 
 void search(BplusTree T, int pageSize, double threshold)
 {
@@ -74,12 +38,17 @@ void search(BplusTree T, int pageSize, double threshold)
         {
             std::wstring tmp = word;
             StemEnglish(word);
-            auto it = wordIdf.find(word);
-            if(it == wordIdf.end())
-                std::wcout << L"\033[31mWarning: \033[0m" << tmp << L" is not in the inverted index and will be ignored." << std::endl;
+            auto it = stopWords.find(word);
+            if(it != stopWords.end())
+                std::wcout << L"\033[31mWarning: \033[0m" << tmp << L" is in the stop list and will be ignored." << std::endl;
             else
-                queryWord.push_back({word,wordIdf[word]});
-            //std::wcout << L"test Word: " << tmp << L" Stem: " << word << std::endl;
+            {
+                auto it2 = wordIdf.find(word);
+                if(it2 == wordIdf.end())
+                    std::wcout << L"\033[31mWarning: \033[0m" << tmp << L" is not in the inverted index and will be ignored." << std::endl;
+                else
+                    queryWord.push_back({word,wordIdf[word]});
+            }
             word = L"";
         }
     }
@@ -87,7 +56,7 @@ void search(BplusTree T, int pageSize, double threshold)
     
     // Search for documents that contain all the query words
     int cntForDoc = 0;
-    int cntForWord = (int)(queryWord.size() * threshold);
+    int cntForWord = (int)(queryWord.size() * threshold)+1;
     char * wordForSearch;
     if(queryWord.size() == 0)
     {
@@ -124,13 +93,16 @@ void search(BplusTree T, int pageSize, double threshold)
         {
             if(cntForWord == 0)
                 break;
+            
             wordForSearch = wstringToChararr(p.first);
             auto currentPosVec = FindBP2(wordForSearch, -1, T);
+        
             std::unordered_map<int, bool> currentDocIdMap;
             for(auto &pos : currentPosVec)
             {
                 currentDocIdMap[pos.first] = true;
                 freqMap[pos.first] += pos.second * p.second;
+                //std::cout << "idf:" << wordIdf[p.first] << std::endl;
             }
             if(freqMap.size()>0)
             {
@@ -148,11 +120,11 @@ void search(BplusTree T, int pageSize, double threshold)
         {
             std::cout << "Ops, your query is not in the inverted index, so there are no documents retrieved. " << std::endl;
             std::cout << "Please try again with different query." << std::endl;
-            printf("File name                \tTf-Idf\n");
             return;
         }
         else
         {
+            printf("File name                \tTf-Idf\n");
             std::vector<std::pair<int,double>> sortedFreqVec(freqMap.begin(), freqMap.end());
             std::sort(sortedFreqVec.begin(), sortedFreqVec.end(), [](const std::pair<int, double>& a, const std::pair<int, double>& b) {return a.second > b.second; });
             for(auto &p : sortedFreqVec)
@@ -227,9 +199,62 @@ std::vector<std::pair<int,double>> RetrievePL2(PosList L)
 
     while (cur != NULL) {
         tf = (double)cur->time / (double)fileWordsNum[cur->pos];
+        //std::cout << "tf: " << tf << std::endl;
         posVec.push_back({cur->pos, tf});
         cur = cur->next;
     }
 
     return posVec;
+}
+
+void loadWordIdf(std::string filePath)
+{
+    std::wifstream infile;
+    std::wstring word;
+    int freq;
+    double idf;
+    infile.open(filePath,std::ios::in);
+    if(!infile.is_open())
+    {
+        std::cout << "Error: unable to open file " << filePath << std::endl;
+        return;
+    }
+    while(infile >> word >> freq)
+    {
+        idf = log(1115.0/(double)(1+freq));
+        wordIdf[word] = idf;
+    }
+    std::cout << "Word Idf loaded successfully." << std::endl;
+}
+
+void loadFileWordsNum(std::string filePath)
+{
+    std::wifstream infile;
+    std::wstring filename;
+    int num;
+    int cnt = 0;
+    infile.open(filePath,std::ios::in);
+    if(!infile.is_open())
+    {
+        std::cout << "Error: unable to open file " << filePath << std::endl;
+        return;
+    }
+    while(infile >> filename >> num)
+        fileWordsNum[cnt++] = num;
+    std::cout << "The word count of every file loaded successfully." << std::endl;
+}
+
+void loadStopWords(std::string filePath)
+{
+    std::wifstream infile;
+    std::wstring word;
+    infile.open(filePath,std::ios::in);
+    if(!infile.is_open())
+    {
+        std::cout << "Error: unable to open file " << filePath << std::endl;
+        return;
+    }
+    while(infile >> word)
+        stopWords[word] = true;
+    std::cout << "Stop words loaded successfully." << std::endl;
 }
