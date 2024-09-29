@@ -35,17 +35,11 @@ stemming::english_stem<> StemEnglish;
  *        pageSize: number of documents to be displayed per query
  *        threshold: the proportion of search terms to the total number of terms
 *****************************************/
-void search(BplusTree T, int pageSize, double threshold)
+void search(std::string query, BplusTree T, int pageSize, double threshold)
 {
-    std::cout << "Please enter your query:" << std::endl;
-    
-    std::string query;
+    /*load the query and analyze it*/
     //vector: Elements are {word:wordIdf}
     std::vector<std::pair<std::wstring,double>> queryWord;
-
-    /* Read query from user and analyse it*/
-    std::getline(std::cin,query);
-    query += " ";                 // add a space at the end of the query to avoid errors
     std::wstring word=L"";
     //Iterate through each character in the string and extract the words
     for(char &c : query)
@@ -81,7 +75,13 @@ void search(BplusTree T, int pageSize, double threshold)
     
     /* Search for documents that contain all the query words */
     int cntForDoc = 0;                                       // counter for pageSize
-    int cntForWord = (int)(queryWord.size() * threshold)+1;  // counter for threshold
+    int cntForWord = (int)(queryWord.size() * threshold);    // counter for threshold
+    //control the size of cntForWord, to avoid bugs
+    if (cntForWord == 0)
+        cntForWord = 1;
+    else if (cntForWord > queryWord.size())
+        cntForWord = queryWord.size();
+    
     char * wordForSearch;                                    // char array for search
     //if the query is empty or only has stop words, return
     if(queryWord.size() == 0)

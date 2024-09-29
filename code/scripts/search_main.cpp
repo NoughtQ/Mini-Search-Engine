@@ -4,7 +4,6 @@
  * Then it enters a loop to repeatedly search for a query until the user chooses to exit.
 ****************************************/
 #include <iostream>
-#include <cstdlib>
 #include "invIndexHeader.h"
 
 int main()
@@ -15,7 +14,7 @@ int main()
     loadFileWordsNum(FILEWORDCOUNTPATH);    //load file-word count dictionary
     loadStopWords(STOPWORDPATH);            //load stop words list
     BplusTree InvIndex = CreateBP();        //create B+ tree for inverted index
-    InvIndex = fileTraversaler(InvIndex, (char *)SHAKSPEAREDIR, (char *)"", false, false);
+    InvIndex = fileTraversaler(InvIndex, (char *)SHAKSPEAREDIR, (char *)"", false, true);
     std::cout << "Inverted Index has been established successfully!"<<std::endl;
     std::cout << "--------------------------------------------------"<< std::endl;
 
@@ -33,7 +32,13 @@ int main()
 
     //start the search loop
     Searchbegin:
-    search(InvIndex, pageSize, threshold);
+    std::cout << "Please enter your query:" << std::endl;
+    std::string query;
+    /* Read query from user and analyse it*/
+    std::getline(std::cin,query);
+    query += " ";                 // add a space at the end of the query to avoid errors
+    
+    search(query, InvIndex, pageSize, threshold);
     //ask user if they want to search again
     std::cout << "Do you want to search again?\033[1;31m(y/n)\033[0m: ";
     char choice;

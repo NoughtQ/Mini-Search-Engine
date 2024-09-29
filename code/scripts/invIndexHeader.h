@@ -159,7 +159,7 @@ void PrintTime(clock_t start, clock_t end);
 void loadWordIdf(std::string filePath);
 void loadFileWordsNum(std::string filePath);
 void loadStopWords(std::string filePath);
-void search(BplusTree T, int pageSize, double threshold);
+void search(std::string query, BplusTree T, int pageSize, double threshold);
 std::vector<std::pair<int,double>> FindBP2(string term, int docCnt, BplusTree T) ;
 std::vector<std::pair<int,double>> isSameTerm2(string term, int docCnt, NodeBP nodebp) ;
 std::vector<std::pair<int,double>> RetrievePL2(PosList L) ;
