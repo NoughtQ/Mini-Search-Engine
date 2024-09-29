@@ -139,6 +139,8 @@ int FindHashSW(string stopword, HashTb H, bool justSearch);
 void InsertHashSW(string stopword, HashTb H);
 // Hashing function
 int HashFunc(string stopword, int size);
+// Print hash table
+void PrintHashTb(HashTb H);
 
 // Comparison functions used in qsort()
 int cmpData(const void * a, const void * b);     // Compare data of the node in B+ tree
@@ -147,6 +149,10 @@ int cmpNodeBP(const void * a, const void * b);   // Compare the node by their da
 // wstring <-> char *, for word stemming
 std::wstring chararrToWstring(char * st);
 char * wstringToChararr(std::wstring wst);
+
+// Word Stmming wrapper
+string WordStem(string term);
+
 // Print the ticks and duration, for -tr or --time function
 void PrintTime(clock_t start, clock_t end);
 

@@ -72,10 +72,8 @@ int main(int argc, char * argv[]) {        // Use command line parameters
             strcpy(word, tmp);
 
             // Word stemming
-            word_wstr = chararrToWstring(word);
-            StemEnglish(word_wstr);
-            word = wstringToChararr(word_wstr);
-
+            word = WordStem(word);
+            
             // Find the word
             if (!timeRecord) {  // No time record
                 FindBP(word, -1, InvIndex, &isFound, findCnt);

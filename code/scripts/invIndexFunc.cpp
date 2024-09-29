@@ -1,6 +1,7 @@
 // Implementation of methods related to B+ tree in invIndex.h
 #include "invIndexHeader.h"
 #include "wordStem/english_stem.h"
+#include <algorithm>
 #include <codecvt>
 #include <filesystem>
 #include <locale>
@@ -17,6 +18,7 @@ extern "C" {
 namespace fs = std::filesystem;    
 
 string docNames[MAXDOCSUM];      // Array containing names of documents(global variable)
+HashTb H;                        // Hash table storing the stop words
 
 // The highest-level function, which users can call it directly
 // isTest: -t or --test mode, just use one particular file
@@ -64,6 +66,11 @@ BplusTree fileTraversaler(BplusTree T, char * dir, char * fname, bool isTest, bo
     int docCnt = 0;      // Count the number of documents and act as the index of the documents at the same time
     char * wholePath;    // The whole path name
     FILE * fp = NULL;    // File pointer
+
+    H = GenerateHashTb();                  // Build a hash table for stop words
+    /* if (containStopWords) {                // If in stopwords mode, print the hash table
+        PrintHashTb(H);
+    } */
 
     wholePath = new char[MAXREADSTRLEN];
     if (!isTest) {       // If we choose the test mode in the test file, 
@@ -122,14 +129,10 @@ BplusTree UpdateInvertedIndex(BplusTree T, int docCnt, FILE * fp, bool containSt
     int i;         
     int pre, cur;                          // Mark the start and the end of one word
     char tmp[MAXREADSTRLEN];               // Memory space storing the reading data temporarily
-    char * term;                           // Term(or word)
+    string term;                           // Term(or word)
     bool isDuplicated;                     // A flag, record whether the term exists in the B+ tree
     NodeBP nodebp;                         // Node in B+ tree
-    HashTb H;                              // Hash table storing the stop wors
-    std::wstring term_wstr;                // the wstring form of the term
-    stemming::english_stem<> StemEnglish;  // Word stemming function(a little clumsy)
 
-    H = GenerateHashTb();                  // Build a hash table for stop words
 
     while (fgets(tmp, MAXREADSTRLEN - 1, fp) != NULL) {  // Continue reading the file, until arrive at the end of file
         pre = cur = 0;                        // Initialization
@@ -141,16 +144,14 @@ BplusTree UpdateInvertedIndex(BplusTree T, int docCnt, FILE * fp, bool containSt
                     strncpy(term, tmp + pre, cur - pre);
                     term[cur - pre] = '\0';   // Don't forget this step
 
+                    // Word stemming
+                    term = WordStem(term);
+
                     // If we consider the stop words(default) and assure the term is a stop word, 
                     if (!containStopWords && FindHashSW(term, H, true) >= 0) {
                         pre = cur + 1;
                         continue;  // then we should ignore it
                     }
-
-                    // Word stemming
-                    term_wstr = chararrToWstring(term);
-                    StemEnglish(term_wstr);
-                    term = wstringToChararr(term_wstr);
                     
                     isDuplicated = false;
                     nodebp = FindBP(term, docCnt, T, &isDuplicated);  // Find the appropriate position for the term
@@ -172,9 +173,13 @@ BplusTree UpdateInvertedIndex(BplusTree T, int docCnt, FILE * fp, bool containSt
             term[cur - pre] = '\0';
 
             // Word stemming
-            term_wstr = chararrToWstring(term);
-            StemEnglish(term_wstr);
-            term = wstringToChararr(term_wstr);
+            term = WordStem(term);
+
+            // If we consider the stop words(default) and assure the term is a stop word, 
+            if (!containStopWords && FindHashSW(term, H, true) >= 0) {
+                pre = cur + 1;
+                continue;  // then we should ignore it
+            }
             
             isDuplicated = false;
             nodebp = FindBP(term, docCnt, T, &isDuplicated); // Find the appropriate position for the term
@@ -570,7 +575,6 @@ HashTb GenerateHashTb() {
         // Handle the last possible word in the tmp string
         if (!cur || pre > cur && pre != i) {
             cur = i;
-
             term = (char *)malloc(sizeof(char) * (cur - pre + 1));
             strncpy(term, tmp + pre, cur - pre);
             term[cur - pre] = '\0';
@@ -617,15 +621,18 @@ int FindHashSW(string stopword, HashTb H, bool justSearch) {
     pos = HashFunc(stopword, H->size);    // Use hashing function first
 
     // If we just search a term in the hash table and assure it's not a stop word, then return
-    if (justSearch && (H->data[pos]->info == Empty || strcmp(H->data[pos]->stopword, stopword))) {
-        return -1;
-    }
+    // if (justSearch && (H->data[pos]->info == Empty || strcmp(H->data[pos]->stopword, stopword))) {
+    //     return -1;
+    // }
 
     // Collision occurs!
     while (H->data[pos]->info != Empty && strcmp(H->data[pos]->stopword, stopword)) {
         pos += 2 * ++collisionNum - 1;  // Quadratic probe
         if (pos >= H->size)        
-            pos -= H->size;     
+            pos -= H->size;
+        if (justSearch && H->data[pos]->info == Empty) {
+            return -1;
+        }
     }
     return pos;  
 }
@@ -651,6 +658,19 @@ int HashFunc(string stopword, int size) {
     while (*stopword != '\0')
         val = (val << 5) + *stopword++;    // Generate the hash value from every character in the string
     return val % size;
+}
+
+// Print hash table
+void PrintHashTb(HashTb H) {
+    int i;
+
+    printf("Stopwords in hash table:\n");
+    for (i = 0; i < H->size; i++) {
+        if (H->data[i]->info != Empty) {
+            printf("%d: %s\n", i, H->data[i]->stopword);
+        }
+    }
+    printf("\n");
 }
 
 // Comparison functions used in qsort()
@@ -684,6 +704,19 @@ char * wstringToChararr(std::wstring wst) {
     strcpy(st, tmp.c_str());
 
     return st;
+}
+
+// Word Stmming wrapper
+string WordStem(string term) {
+    std::wstring term_wstr;                // the wstring form of the term
+    stemming::english_stem<> StemEnglish;  // Word stemming function(a little clumsy)
+
+    term_wstr = chararrToWstring(term);
+    transform(term_wstr.begin(), term_wstr.end(), term_wstr.begin(), ::tolower);
+    StemEnglish(term_wstr);
+    term = wstringToChararr(term_wstr);
+
+    return term;
 }
 
 // Print the ticks and duration, for -tr or --time function
