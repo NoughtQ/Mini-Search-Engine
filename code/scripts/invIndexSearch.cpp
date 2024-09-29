@@ -17,7 +17,7 @@
 #include "wordStem/english_stem.h"   // for stemming
 #include "invIndexHeader.h"
 
-#define DOCTOTALNUM 1115             // total number of documents
+#define DOCTOTALNUM 992             // total number of documents
 
 //hash table: {word:wordIdf}
 std::unordered_map<std::wstring, double> wordIdf;
