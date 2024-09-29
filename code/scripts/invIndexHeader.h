@@ -17,7 +17,7 @@
 #define MAXREADSTRLEN 101              // The maximum lenght of string for one read
 #define STOPWORDSUM 300                // The maximum number of stop words
 #define STOPWORDPATH "../sources/stop_words.txt"  // The path of the file storing stop words
-#define DEFAULTFILEPOS "tests"         // The default position of the file(for test mode)
+#define DEFAULTFILEPOS "../sources/tests"         // The default position of the file(for test mode)
 
 // alias
 typedef char * string;
@@ -147,7 +147,7 @@ std::wstring chararrToWstring(char * st);
 char * wstringToChararr(std::wstring wst);
 
 // Word Stmming wrapper
-void WordStem(string term);
+string WordStem(string term);
 
 // Print the ticks and duration, for -tr or --time function
 void PrintTime(clock_t start, clock_t end);

@@ -145,7 +145,7 @@ BplusTree UpdateInvertedIndex(BplusTree T, int docCnt, FILE * fp, bool containSt
                     term[cur - pre] = '\0';   // Don't forget this step
 
                     // Word stemming
-                    WordStem(term);
+                    term = WordStem(term);
 
                     // If we consider the stop words(default) and assure the term is a stop word, 
                     if (!containStopWords && FindHashSW(term, H, true) >= 0) {
@@ -173,7 +173,7 @@ BplusTree UpdateInvertedIndex(BplusTree T, int docCnt, FILE * fp, bool containSt
             term[cur - pre] = '\0';
 
             // Word stemming
-            WordStem(term);
+            term = WordStem(term);
 
             // If we consider the stop words(default) and assure the term is a stop word, 
             if (!containStopWords && FindHashSW(term, H, true) >= 0) {
@@ -707,7 +707,7 @@ char * wstringToChararr(std::wstring wst) {
 }
 
 // Word Stmming wrapper
-void WordStem(string term) {
+string WordStem(string term) {
     std::wstring term_wstr;                // the wstring form of the term
     stemming::english_stem<> StemEnglish;  // Word stemming function(a little clumsy)
 
@@ -715,6 +715,8 @@ void WordStem(string term) {
     transform(term_wstr.begin(), term_wstr.end(), term_wstr.begin(), ::tolower);
     StemEnglish(term_wstr);
     term = wstringToChararr(term_wstr);
+
+    return term;
 }
 
 // Print the ticks and duration, for -tr or --time function
