@@ -202,8 +202,11 @@
     pagebreak()
   }
   
+  set page(numbering: "I")
+
   if (table_of_contents) {
     set text(size: 15pt)
+    
     
     v(-1em)
     outline(
@@ -211,6 +214,7 @@
       depth: 3,
       indent: 1.2em,
     )
+    
     
     pagebreak()
   }
@@ -255,8 +259,8 @@
     #if border == true {
       block(
         width: 100%,
-        stroke: 0.5pt + luma(150),
-        radius: 4pt,
+        stroke: .5pt,
+        radius: 0pt,
         inset: 8pt,
       )[
         #raw(lang: lang, block: true, code)
@@ -272,7 +276,7 @@
   let code = ""
   let note = ""
   let flag = false
-  let firstlines = true
+  let firstlines = false
 
   for line in source_code.split("\n") {
     if namespace != none and line == ("} // namespace " + namespace) {

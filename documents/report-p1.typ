@@ -6,6 +6,7 @@
   course: "Advanced Data Structures and Algorithm Analysis",
   title: "Project 1: Roll Your Own Mini Search Engine",
   cover_image_size: 50%,
+  cover_image_padding: 1em,
   semester: "2024-2025 Autumn&Winter",
   author: none,
   school_id: "",
@@ -47,9 +48,9 @@ Here are some specific requirements:
 
 #v(.5em)
 
-1. *B+ Trees*: It's a improved version of search trees, widely used in the relational database and file management in operating systems. We will use this data structure to store and access to the inverted index.
-2. *Queue*: 
-3. *Hashing*:
+1. *B+ Trees*: It's an improved version of search trees, widely used in the relational database and file management in operating systems. We will use this data structure to store and access to the inverted index.
+2. *Hashing*: Hash tables have an excellent performance in searching data(only cost O(1) time), hence we take advantage of this data structure for finding stopwords when building an inverted index.
+3. *Queue*: The Queue ADT is one of the most basic data structrues used in printing the B+ tree, storing the positions for terms, etc.
 
 #v(1.5em)
 
@@ -69,6 +70,21 @@ In the following sections, I will introduce these algorithms from top to down, b
 
 == Word Stemming 
 
+We tap into the codes from a GitHub repository called "OleanderStemmingLibrary" by the author Blake-Madden. The codes are stored in the directory `code/wordStem`, and the link of repository is listed in the *References* section below.
+
+#let render(theme_name) = [
+  #state_block_theme.update(theme_name)
+
+  #warning(name: [Warning])[
+    We have to admitted that this word stemming program is kind of clumsy, especially for nouns, because the program will continue doing word stemming even though the word is in the simplest and the most common form. For example, for a simple English word "orange", it will convert it to another word "orang", which means "gorilla".
+
+    Owing to the time and capability limitation, we couldn't find a better word stemming programs in C/C++ version or convert other languages version to C/C++ version. We hope that we will use a smarter word stemming program in the foreseeable future.
+  ]
+
+  #v(1em)
+]
+#render("thickness")
+
 == Inverted Index
 
 Maybe this is the most complicated part of the whole program, because in this part we have a relatively complex algorithm architecture, and we use a couple of data structrues and algorithms, such as B+ trees, implicit queue ADT and linked list ADT. Here is the diagram of the functions used in the inverted index:
@@ -77,10 +93,10 @@ Maybe this is the most complicated part of the whole program, because in this pa
   image("../template/images/1.png"), caption: "Relation diagram of all functions for inverted index"
 )
 
-- Red: Overall Functions
-- Blue: B+ Tree Operations
-- Green: Hashing Functions
-- Yellow: Other Functions
+- #text(fill: red)[Red]: Overall Functions
+- #text(fill: blue)[Blue]: B+ Tree Operations
+- #text(fill: green)[Green]: Hashing Functions
+- #text(fill: yellow)[Yellow]: Other Functions
 
 We'll introduce these functions in detail below.
 
@@ -172,7 +188,7 @@ We'll introduce these functions in detail below.
   Begin #i\ 
     _docCnt_ = 0 #comment[Count the number of documents and act as the index of the documents at the same time]\
 
-    if _isTest_ == false then #i\
+    if _isTest_ is false then #i\
       if _dir_ exists then #i\
         for _file_ in the _dir_ directory do #i\
           _filename_ $<-$ the name of _file_ #comment[string] \
@@ -220,15 +236,15 @@ We'll introduce these functions in detail below.
   Begin #i\ 
     _H_ $<-$ GenerateHashTb() \
     while reading texts in the file pointed by _fp_ do #i\
-      if find an English word then #i\
+      if find an English word then do #i\
         _term_ $<-$ the English word \
-        if _containStopWords_ == false and FindHashSW(_term_, _H_, true) >= 0 then #i\
+        if _containStopWords_ is false and FindHashSW(_term_, _H_, true) >= 0 then #i\
           continue #d\
         endif \
         _term_ $<-$ WordStemming(_term_) \
         _isDuplicated_ $<-$ false \ 
         _nodebp_ $<-$ FindBP(_term_, _docCnt_, _T_, _isDuplicated_) \
-        if _isDuplicated_ == false then #i\
+        if _isDuplicated_ is false then #i\
           _T_ = InsertBP(_term_, _docCnt_, _nodebp_, _T_) #d\
         endif #d\
       else #i\
@@ -241,6 +257,19 @@ We'll introduce these functions in detail below.
 ]
 
 === B+ Tree Operations
+
+#v(1em)
+
+#let render(theme_name) = [
+  #state_block_theme.update(theme_name)
+
+  #note(name: [Note])[
+    - The order of our B+ tree is 4.
+  ]
+
+  #v(1em)
+]
+#render("thickness")
 
 *(1) CreateBP*
 
@@ -284,14 +313,14 @@ We'll introduce these functions in detail below.
       - _T_: inverted index
       - _flag_: true if the term is found, false otherwise
       - _isSearch_: mark the find mode(-f or --find)
-    #fakebold[Outputs]: the updated B+ tree _T_ or recursively call itself again
+    #fakebold[Outputs]: the (possibly updated) B+ tree _T_ or recursively call itself again
 
     #fakebold[Procedure]: FindBP(_term_: #fakebold[string], _docCnt_: #fakebold[integer], _T_: #fakebold[BplusTree], _flag_: #fakebold[booleanPointer], _isSearch_: #fakebold[boolean])
   ],
   block-align: left,
 )[
   Begin #i\ 
-    if _T_$->$childrenSize == 0 then #i\
+    if _T_$->$childrenSize = 0 then #i\
       isSameTerm(_term_, _docCnt_, _T_, _flag_, _isSearch_) \
       return _T_ #d\
     endif \
@@ -304,7 +333,7 @@ We'll introduce these functions in detail below.
       endif #d\
     end \
 
-    if _pos_ == -1 then #i\
+    if _pos_ = -1 then #i\
       _pos_ $<-$ _i_ #d\
     endif
 
@@ -333,8 +362,8 @@ We'll introduce these functions in detail below.
   Begin #i\ 
     if _nodebp_$->$_size_ > 0 then #i\
       for _i_ in range(0, _T_$->$_size_) do #comment[not contains _T_$->$_size_] #i\
-        if _term_ == _nodebp_$->$_data_[_i_]$->$_term_ then #i\
-          if _isSearch_ == false then #i\
+        if _term_ = _nodebp_$->$_data_[_i_]$->$_term_ then #i\
+          if _isSearch_ is false then #i\
             EnqueuePL(_docCnt_, _nodebp_$->$_data_[_i_]$->$_poslist_) #d\
           else #i\
             _poslist_ $<-$ _nodebp_$->$_data_[_i_]$->$_poslist_ \
@@ -368,58 +397,182 @@ We'll introduce these functions in detail below.
 
 *(4) InsertBP*
 
-#fakebold[Function]: 
+#fakebold[Function]: Insert a term into the B+ tree.
 
 #algo(
   header: [
     #fakebold[Inputs]:
-    
-    #fakebold[Outputs]: 
+    - _term_: term
+    - _docCnt_: the index of the document
+    - _nodebp_: the appropriate node where the term will be inserted
+    - _Tree_: B+ tree containing the inverted index
+        
+    #fakebold[Outputs]: the updated B+ tree _Tree_
 
-    #fakebold[Procedure]: 
+    #fakebold[Procedure]: InsertBP(_term_: #fakebold[string], _docCnt_: #fakebold[integer], _nodebp_: #fakebold[NodeBP], _Tree_: #fakebold[BplusTree])
   ],
   block-align: left,
 )[
   Begin #i\ 
-
+    _nodebp_$->$_data_[_nodebp_$->$_size_]$->$_term_ $<-$ _term_ \
+    EnqueuePL(_docCnt_, _nodebp_$->$_data_[_nodebp_$->$_size_]$->$_poslist_) \
+    _nodebp_$->$_size_ $<-$ _nodebp_$->$_size_ + 1 \
+    Sort(_nodebp_$->$_data_) \
+    _Tree_ $<-$ SplitBP(_nodebp_, _Tree_) \
+    return _Tree_ #d\
   End
 ]
 
 *(5) SplitBP*
 
-#fakebold[Function]: 
+#fakebold[Function]: Split the node when the node is full.
 
 #algo(
   header: [
     #fakebold[Inputs]:
-    
-    #fakebold[Outputs]: 
 
-    #fakebold[Procedure]: 
+    - _nodebp_: the appropriate node where the term will be inserted
+    - _Tree_: B+ tree containing the inverted index
+    
+    #fakebold[Outputs]: The updated B+ tree _Tree_, or recursively call itself to split _nodebp_'s parent node
+
+    #fakebold[Procedure]: SplitBP(_nodebp_: #fakebold[NodeBP], _Tree_: #fakebold[BplusTree])
   ],
   block-align: left,
 )[
   Begin #i\ 
+    #comment[_ORDER_: (constant)the order of B+ trees]
 
+    if (_nodebp_$->$_childrenSize_ = 0 and _nodebp_$->$_size_ <= _ORDER_) or (_nodebp_$->$_childrenSize_ > 0 and _nodebp_$->$_size_ < _ORDER_) then #i\
+      return _Tree_ #d\
+    endif \
+    \ 
+    #comment[_lnodebp_, _rnodebp_: the left and right part of the split node] \
+    #comment[_tmpNodebp_: store the node temporarily] \
+    #comment[_parent_: the parent node of nodebp] \
+    #comment[_cut_: the position of the middle data] \
+    \
+
+    _parent_ $<-$ _nodebp_$->$_parent_ \
+
+    if _parent_ = NULL then #i\
+      _tmpNodebp_ $<-$ CreateBP() \
+      Allocate memory for _parent_ \
+      _Tree_ $<-$ _parent_ $<-$ _tmpNodebp_ #d\
+    endif \
+
+    _lnodebp_ $<-$ CreateBP() \
+    _rnodebp_ $<-$ CreateBP() \
+    _lnodebp_$->$_parent_ $<-$ _rnodebp_$->$_parent_ $<-$ _parent_ \
+
+    if _nodebp_$->$_childrenSize_ = 0 then #i\
+      _cut_ $<-$ _LEAFCUT_ #comment[constant: (ORDER / 2 + 1)] \
+      for _i_ in range(0, _cut_) do #comment[not contains _cut_] #i\
+        _lnodebp_$->$_data_[_i_] $<-$ _nodebp_$->$_data_[_i_] #d\
+      end \
+      _lnodebp_$->$_size_ $<-$ _cut_ \ 
+
+      for _j_ in range(_cut_, _nodebp_$->$_size_) do #comment[not contains _nodebp_$->$_size_] #i\
+        _rnodebp_$->$_data_[_j_ - _cut_] $<-$ _nodebp_$->$_data_[_j_] #d\
+      end \
+      _rnodebp_$->$_size_ $<-$ _nodebp_$->$_size_ - _cut_ #d\
+    else #i\
+      _cut_ $<-$ _NONLEAFCUT_ #comment[constant: (ORDER / 2)] \
+      for _i_ in range(0, _cut_ + 1) do #comment[not contains _cut_ + 1] #i\
+        if _i_ $eq.not$ _cut_ then #i\
+          _lnodebp_$->$_data_[_i_] $<-$ _nodebp_$->$_data_[_i_] #d\
+        endif \
+        _lnodebp_$->$_children_[_i_] $<-$ _nodebp_$->$_children_[_i_] \
+        _lnodebp_$->$_children_$->$_parent_ $<-$ _lnodebp_ #d\
+      end \
+      _lnodebp_$->$_size_ $<-$ _cut_ \ 
+      _lnodebp_$->$_childrenSize_ $<-$ _cut_ + 1\
+
+      for _j_ in range(_cut_ + 1, _nodebp_$->$_size_) do #comment[not contains _nodebp_$->$_size_] #i\
+        _rnodebp_$->$_data_[_j_ - _cut_ - 1] $<-$ _nodebp_$->$_data_[_j_] #d\
+      end \
+
+      for _j_ in range(_cut_ + 1, _nodebp_$->$_childrenSize_) do #comment[not contains _nodebp_$->$_childrenSize_] #i\
+        _rnodebp_$->$_children_[_j_ - _cut_ - 1] $<-$ _nodebp_$->$_children_[_j_] \
+        _rnodebp_$->$_children_[_j_ - _cut_ - 1]$->$_parent_ $<-$ _rnodebp_ #d\        
+      end \      
+
+      _rnodebp_$->$_size_ $<-$ _nodebp_$->$_size_ - _cut_ - 1 
+      _rnodebp_$->$_childrenSize_ $<-$ _nodebp_$->$_childrenSize_ - _cut_ - 1#d\
+    end \
+
+    _parent_$->$_data_[_parent_$->$_size_] $<-$ _nodebp_$->$_data_[_cut_] \
+    _parent_$->$_size_ $<-$ _parent_$->$_size_ + 1 \
+    if _parent_$->$_childrenSize_ > 0 then #i\
+      for _i_ in range(0, _parent_$->$_childrenSize_) do #comment[not contains _parent_$->$_childrenSize_] #i\
+        if _parent_$->$_children_[_i_] = _nodebp_ then #i\
+          _parent_$->$_children_[_i_] $<-$ _lnodebp_ \
+          break #d\
+        endif #d\
+      end #d\
+    else #i\
+      _parent_$->$_children_[_parent_$->$_childrenSize_] $<-$ _lnodebp_ \
+      _parent_$->$_childrenSize_ $<-$ _parent_$->$_childrenSize_ + 1 #d\ 
+    endif \
+    _parent_$->$_children_[_parent_$->$_childrenSize_] $<-$ _rnodebp_ \
+    _parent_$->$_childrenSize_ $<-$ _parent_$->$_childrenSize_ + 1 \
+    Sort(_parent_$->$_data_) \
+    Sort(_parent_$->$_children_) \
+
+    _Tree_ $<-$ SplitBP(_parent_, _Tree_) \
+
+    return _Tree_ #d\
   End
 ]
 
 *(6) PrintBPTree*
 
-#fakebold[Function]: 
+#fakebold[Function]: Print the B+ tree(level-order traversal).
 
 #algo(
   header: [
     #fakebold[Inputs]:
     
-    #fakebold[Outputs]: 
+    - _T_: B+ tree containing the inverted index
 
-    #fakebold[Procedure]: 
+    #fakebold[Outputs]: None, but will print the whole B+ tree
+
+    #fakebold[Procedure]: PrintBPTree(_T_: #fakebold[BplusTree])
   ],
   block-align: left,
 )[
   Begin #i\ 
+    print("B+ Tree of Inverted Index:") \
 
+    _q_ $<-$ CreateQueueBP() \
+    EnqueueBP(_T_, _q_) \
+    EnqueueBP(_NULL_, _q_) \
+
+    while _q_$->$_size_ > 0 do #i\
+      _nodebp_ $<-$ DequeueBP(q) \
+      if _nodebp_ is _NULL_ then #i\
+        change to a newline \
+        if _q_$->$_size_ > 0 then #i\
+          EnqueueBP(_NULL_, _q_) #d\
+        endif #d\
+      else #i\
+        print("[") \
+        for _i_ in range(0, _nodebp_$->$_size_) do #comment[not contains _nodebp_$->$_size_] #i\
+          if _i_ = 0 then #i\
+            print(_nodebp_$->$_data_[_i_]$->$_term_) #d\
+          else #i\
+            print(", {_nodebp_$->$_data_[_i_]$->$_term_}") #d\
+          endif #d\
+        end \
+        print("]") #d\
+      endif \
+
+      if nodebp is not _NULL_ then #i\
+        for _i_ in range (0, _nodebp_$->$_childrenSize_) do #comment[not contains _nodebp_$->$_childrenSize_] #i\
+          EnqueueBP(_nodebp_$->$_children_[_i_], _q_) #d\
+        end #d\
+      endif #d\
+    end #d\
   End
 ]
 
@@ -427,96 +580,158 @@ We'll introduce these functions in detail below.
 
 *(1) GenerateHashTb*
 
-#fakebold[Function]: 
+#fakebold[Function]: Build a hash table.
 
 #algo(
   header: [
-    #fakebold[Inputs]:
+    #fakebold[Inputs]: None
     
-    #fakebold[Outputs]: 
+    #fakebold[Outputs]: A new hash table _H_, containing stopwords from the file
 
-    #fakebold[Procedure]: 
+    #fakebold[Procedure]: GenerateHashTb()
   ],
   block-align: left,
 )[
   Begin #i\ 
+    _H_ $<-$ InitHashTb() \
+    _fname_ $<-$ _STOPWORDPATH_ #comment[constant: "stop_words.txt"] \
+    _fp_ $<-$ openfile(_fname_, "r") #comment[read mode] \
+    if _fp_ is _NULL_ then #i\
+      Error("Fail to open the file of stopwords!") #d\
+    endif \
 
+    while reading texts in the file pointed by _fp_ do #i\
+      if find an English word then do #i\
+        _term_ $<-$ the English word \
+        InsertHashSW(_term_, _H_) #d\
+      endif #d\
+    end \
+
+    closefile(_fp_) \
+    return _H_ #d\
   End
 ]
 
 *(2) InitHashTb*
 
-#fakebold[Function]: 
+#fakebold[Function]: Initialization of the hash table.
 
 #algo(
   header: [
-    #fakebold[Inputs]:
+    #fakebold[Inputs]: None
     
-    #fakebold[Outputs]: 
+    #fakebold[Outputs]: A new initialized hash table
 
-    #fakebold[Procedure]: 
+    #fakebold[Procedure]: InitHashTb()
   ],
   block-align: left,
 )[
   Begin #i\ 
+    Allocate memory block for _H_ #comment[HashTb] \
+    if _H_ is _NULL_ then #i\
+      Error("Fail to create a hash table for stopwords!") #d\
+    end \
 
+    _H_$->$_size_ $<-$ _STOPWORDSUM_ #comment[maximum size] \
+
+    for i in range(0, _H_$->$_size_) do #comment[not contains _H_$->$_size_] #i\
+      Allocate memory block for _H_$->$_data_[_i_] \
+      if _H_$->$_data_[_i_] is _NULL_ then #i\
+        Error("Fail to create a hash table for stopwords!") #d\
+      end \
+      _H_$->$_data_[_i_]$->$_stopword_ \
+      _H_$->$_data_[_i_]$->$_info_ $<-$ _Empty_ #comment[constant: 0] #d\
+    end \
+    return _H_ #d\
   End
 ]
 
 *(3) FindHashSW*
 
-#fakebold[Function]: 
+#fakebold[Function]: Find the stopwords or other words in the hash table.
 
 #algo(
   header: [
     #fakebold[Inputs]:
+    - _stopword_: stop word
+    - _H_: hash table containing the stop words
+    - _justSearch_: find the term without subsequent insertion    
     
-    #fakebold[Outputs]: 
+    #fakebold[Outputs]: A appropriate position _pos_ in hash table for stopword, or just search the term in the hash table
 
-    #fakebold[Procedure]: 
+    #fakebold[Procedure]: FindHashSW(stopword: #fakebold[string], H: #fakebold[HashTb], justSearch: #fakebold[boolean])
   ],
   block-align: left,
 )[
   Begin #i\ 
+    _collisionNum_ $<-$ 0 \
+    _pos_ $<-$ HashFunc(_stopword_, _H_$->$_size_) \
 
+    if _justSearch_ is true and (_H_$->$_data_[_pos_]$->$_info_ = _Empty_ or _H_$->$_data_[_pos_]$->$_stopword_ = _stopword_) then #i\
+      return -1 #d\
+    endif \
+
+    while _H_$->$_data_[_pos_]$->$_info_ $eq.not$ _Empty_ and _H_$->$_data_[_pos_]$->$_stopword_ = _stopword_ do #i\
+      _collisionNum_ $<-$ _collisionNum_ + 1
+      _pos_ $<-$ _pos_ + 2 \* _collisionNum_ - 1 \
+      if _pos_ >= _H_$->$_size_ then #i\
+        _pos_ $<-$ _pos_ - _H_$->$_size_ #d\
+      endif #d\
+    end \
+    return _pos_ #d\
   End
 ]
 
 *(4) InsertHashSW*
 
-#fakebold[Function]: 
+#fakebold[Function]: Insert a new stopword in hash table.
 
 #algo(
   header: [
     #fakebold[Inputs]:
-    
-    #fakebold[Outputs]: 
+    - _stopword_: stop word
+    - _H_: hash table containing the stop words
 
-    #fakebold[Procedure]: 
+    #fakebold[Outputs]: None, but will update the hash table _H_
+
+    #fakebold[Procedure]: InsertHashSW(_stopword_: #fakebold[string], _H_: #fakebold[HashTb])
   ],
   block-align: left,
 )[
   Begin #i\ 
+    _pos_ $<-$ FindHashSW(_stopword_, _H_, false) \
 
+    #comment[_Legitimate_: (constant) 1] \
+    if (_H_$->$_data_[_pos_]$->$_info_ $eq.not$ _Legitimate_) then #i\
+      _H_$->$_data_[_pos_]$->$_info_ $<-$ _Legitimate_ \
+      _H_$->$_data_[_pos_]$->$_stopword_ $<-$ _stopword_ #d\
+    endif #d\
   End
 ]
 
 *(5) HashFunc*
 
-#fakebold[Function]: 
+#fakebold[Function]: Hashing function.
 
 #algo(
   header: [
     #fakebold[Inputs]:
-    
-    #fakebold[Outputs]: 
 
-    #fakebold[Procedure]: 
+    - _stopword_: stop word
+    - _size_: the maximum size of the hash table
+    
+    #fakebold[Outputs]: A hash value to _stopword_
+
+    #fakebold[Procedure]: HashFunc(_stopword_: #fakebold[string], _size_: #fakebold[integer])
   ],
   block-align: left,
 )[
   Begin #i\ 
-
+    _val_ $<-$ 0 \
+    for each character _ch_ in _stopword_ do #i\
+      _val_ = (_val_ << 5) + integer(_ch_) #d\
+    end \
+    return _val_ % _size_ #d\
   End
 ]
 
@@ -524,115 +739,171 @@ We'll introduce these functions in detail below.
 
 *(1) CreateQueueBP*
 
-#fakebold[Function]: 
+#fakebold[Function]: Create the queue
 
 #algo(
   header: [
-    #fakebold[Inputs]:
+    #fakebold[Inputs]: None
     
-    #fakebold[Outputs]: 
+    #fakebold[Outputs]: A new queue _Q_
 
-    #fakebold[Procedure]: 
+    #fakebold[Procedure]: CreateQueueBP()
   ],
   block-align: left,
 )[
   Begin #i\ 
-
+    Allocate memory block for the queue _Q_ \
+    _Q_$->$_size_ $<-$ 0 \
+    _Q_$->$_front_ $<-$ _Q_$->$_rear_ $<-$ 0 \
+    return _Q_ #d\
   End
 ]
 
 *(2) EnqueueBP*
 
-#fakebold[Function]: 
+#fakebold[Function]: Put the node of B+ tree into the queue.
 
 #algo(
   header: [
     #fakebold[Inputs]:
-    
-    #fakebold[Outputs]: 
 
-    #fakebold[Procedure]: 
+    - _nodebp_: the newly added node
+    - _Q_: the queue
+    
+    #fakebold[Outputs]: None, but will update _Q_
+
+    #fakebold[Procedure]: EnqueueBP(_nodebp_: #fakebold[NodeBP], _Q_: #fakebold[QueueBP])
   ],
   block-align: left,
 )[
   Begin #i\ 
-
+    if _Q_$->$_size_ >= _SIZE_ then #i\
+      Error("Full B+-tree-item queue!") #d\
+    endif \
+    _Q_$->$_data_[_Q_$->$_rear_] $<-$ _nodebp_ \
+    _Q_$->$_rear_ $<-$ _Q_$->$_rear_ + 1 \
+    _Q_$->$_size_ $<-$ _Q_$->$_size_ + 1 #d\
   End
 ]
 
 *(3) DequeueBP*
 
-#fakebold[Function]: 
+#fakebold[Function]: Get the front node and delete it from the queue.
 
 #algo(
   header: [
     #fakebold[Inputs]:
-    
-    #fakebold[Outputs]: 
 
-    #fakebold[Procedure]: 
+    - _Q_: the queue
+    
+    #fakebold[Outputs]: the front node _returnNodeBP_
+
+    #fakebold[Procedure]: DequeueBP(_Q_: #fakebold[QueueBP])
   ],
   block-align: left,
 )[
   Begin #i\ 
-
+    if _Q_$->$_size_ = 0 then #i\
+      Error("Empty B+-tree-item queue!") #d\
+    endif \
+    _returnNodeBP_ $<-$ _Q_$->$_data_[_Q_$->$_front_] \
+    _Q_$->$_front_ $<-$ _Q_$->$_front_ + 1 \
+    _Q_$->$_size_ $<-$ _Q_$->$_size_ - 1 \
+    return _returnNodeBP_ #d\
   End
 ]
 
 *(4) CreatePL*
 
-#fakebold[Function]: 
+#fakebold[Function]: Create the poslist
 
 #algo(
   header: [
-    #fakebold[Inputs]:
+    #fakebold[Inputs]: None
     
-    #fakebold[Outputs]: 
+    #fakebold[Outputs]: A new PosList _L_
 
-    #fakebold[Procedure]: 
+    #fakebold[Procedure]: CreatePL()
   ],
   block-align: left,
 )[
   Begin #i\ 
+    Allocate memory blocks for _L_(#fakebold[PosList]), _L_$->$_front_(#fakebold[PosData]), _L_$->$_rear_(#fakebold[PosData]) \
+    _L_$->$_size_ $<-$ 0 \
+    _L_$->$_front_ $<-$ _L_$->$_rear_ \
+    _L_$->$_rear_$->$_pos_ $<-$ -1 \
 
+    return _L_ \
   End
 ]
 
 *(5) EnqueuePL*
 
-#fakebold[Function]: 
+#fakebold[Function]: Add new position.
 
 #algo(
   header: [
     #fakebold[Inputs]:
-    
-    #fakebold[Outputs]: 
 
-    #fakebold[Procedure]: 
+    - _pos_: the position
+    - _L_: the position list
+    
+    #fakebold[Outputs]: None, but will update _L_
+
+    #fakebold[Procedure]: EnqueuePL(_pos_: #fakebold[integer], _L_: #fakebold[PosList])
   ],
   block-align: left,
 )[
   Begin #i\ 
-
+    if _L_$->$_rear_$->$_pos_ $eq.not$ _pos_ then #i\
+      Allocate memory block for _tmp_(#fakebold[PosData]) \
+      if _tmp_ is _NULL_ then #i\
+        Error("Fail to create a new position data!") #d\
+      endif \
+      _tmp_$->$_pos_ $<-$ _pos_ \
+      _tmp_$->$_time_ $<-$ 1 \
+      _tmp_$->$_next_ $<-$ _L_$->$_rear_$->$_next_ \
+      _L_$->$_rear_$->$_next_ $<-$ _tmp_ \
+      _L_$->$_rear_ $<-$ _tmp_ \
+      _L_$->$_size_ $<-$ _L_$->$_size_ + 1 #d\
+    else #i\
+      _L_$->$_rear_$->$_time_ $<-$ _L_$->$_rear_$->$_time_ + 1 #d\
+    endif #d\
   End
 ]
 
 *(6) RetrievePL*
 
-#fakebold[Function]: 
+#fakebold[Function]: Retrieve all position in the list.
 
 #algo(
   header: [
     #fakebold[Inputs]:
-    
-    #fakebold[Outputs]: 
 
-    #fakebold[Procedure]: 
+    - _L_: the position list
+
+    #fakebold[Outputs]: An 2D array _posArr_ containing the all position in _L_, and each data contains two attributes: document index and the frequency in that document
+
+    #fakebold[Procedure]: RetrievePL(_L_: #fakebold[PosList])
   ],
   block-align: left,
 )[
   Begin #i\ 
+    if _L_$->$_size_ = 0 then #i\
+      Error("Empty position-data queue!") #d\
+    endif \
 
+    Allocate memory block for _posArr_
+    _cur_ $<-$ _L_$<-$_front_$<-$_next_ \
+    _i_ $<-$ 0 \
+    while _cur_ $eq.not$ _NULL_ do #i\
+      _posArr_[_i_][0] $<-$ _cur_$->$_pos_ \
+      _posArr_[_i_][1] $<-$ _cur_$->$_time_ \
+      _cur_ $<-$ _cur_$->$_next_ \
+      _i_ $<-$ _i_ + 1 #d\
+    end \
+
+    return _posArr_ #d\
   End
 ]
 
@@ -640,15 +911,150 @@ We'll introduce these functions in detail below.
 
 = Chapter 3: Testing Results
 
-== Test 1: Inverted Index
+== Inverted Index
 
-== Test 2: Thresholds for Queries
+To verify the correctness of our inverted index, we have devised several tests from different aspects. Here is the #fakebold[purpose] of each test: 
 
-== Test 3: Speed Test
+- Check if every word in document(s) is inserted into the inverted index correctly.
+- Check if the inverted index can kick off all stopwords.
+- Build an inverted index from a single file, or a directory with a bunch of files.
+
+=== Word Insertion Test
+
+We have two method to accomplish the first purpose: printing the whole inverted index(when the size is small), and finding the words existing in the inverted index(if words were correctly inserted). 
+
+*(1) Printing the inverted index*
+
+#table(columns: 1fr, align: left)[Case 1: very simple example][
+  ```bash $ ./invIndexTest -t -p``` 
+` 
+Now testing the correctness of inverted Index: 
+Please input the name of the input sample file:
+Name:` ```bash input1.txt``` \
+`Build successfully!
+B+ Tree of Inverted Index:
+[beauti, ice, peach]
+[appl, are, banana][beauti, cherri][ice, icecream, orang][peach, pear, strawberri, watermelon]
+`
+][input1.txt][
+ice \
+strawberry \
+orange \
+banana \
+peach \
+apple \ 
+pear \ 
+watermelon \
+cherry icecream you are beautiful 
+]
+
+#v(1em)
+
+#table(columns: 1fr, align: left)[Case 2: simple example][
+```bash $ ./invIndexTest -t -p``` \
+`Now testing the correctness of inverted Index:
+Please input the name of the input sample file:
+Name:` ```bash input2.txt``` \
+`Build successfully!
+B+ Tree of Inverted Index:
+[et, lorem, nullam]
+[consectetur, dolor, elit][id, ipsum][nec][pretium, sed, ut]
+[adipisc, amet, at, congu][consectetur, consequat, dapibus, diam][dolor, e, eget][elit, erat][et, etiam, facilisi, fringilla][id, interdum][ipsum, lacus, lectus][lorem, metus, mi][nec, nulla][nullam, orci, pellentesqu][pretium, purus, rhoncus][sed, sit, sollicitudin, tincidunt][ut, vita]`
+][input2.txt][
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam nec erat sed nulla rhoncus dapibus et at lectus. Etiam in congue diam, ut interdum metus. Nullam pretium orci id mi pellentesque, vitae consequat lacus tincidunt. Pellentesque fringilla purus eget nulla facilisis sollicitudin.   
+]
+
+*(2) Finding words in the inverted index*
+
+#let render(theme_name) = [
+  #state_block_theme.update(theme_name)
+
+  #note(name: [Note])[
+    - This test is just used in checking the correctness of word insertion, which is similar to a simple query function, but the implementation is totally different from our formal query program, so you shouldn't mix them together.
+    - The texts in the following tests are too long, therefore we won't show these text in our report, but you can see them in the files positioned in the directory called `code/tests`.
+  ]
+
+  #v(1em)
+]
+#render("thickness")
+
+#table(columns: 1fr, align: left)[Case 3: intermediate-level example][
+```bash  ./invIndexTest -f=3``` \
+`Now building an inverted Index:
+Please input the directory of the documents:
+Path:` ```bash tests/input3``` \
+`Build successfully!
+
+Finding Words Mode(only supports single word finding):
+Find 1:` ```bash same``` \
+`Successfully find the word!
+The word was found in files below:
+1henryiv.1.2.txt: 1 time
+1henryiv.1.3.txt: 4 times
+Frequency: 5
+-----------------------------------
+Find 2:` ```bash star``` \
+`Successfully find the word!
+The word was found in files below:
+1henryiv.1.2.txt: 1 time
+Frequency: 1
+-----------------------------------
+Find 3:` ```bash fantastic``` \
+`Sorry, no such word in the inverted index!
+----------------------------------- `
+][Verification by using finding function in Visual Studio Code][
+Find 1: same
+
+#grid(
+  columns: 1,
+  image("../template/images/2.png"), 
+  image("../template/images/3.png"),
+  image("../template/images/4.png"), 
+)
+
+#v(1em)
+
+Find 2: star
+
+#grid(
+  columns: 1,
+  image("../template/images/5.png"), 
+  image("../template/images/6.png"),
+  image("../template/images/7.png"), 
+)
+
+#v(1em)
+
+Find 3: fantastic
+
+#grid(
+  columns: 1,
+  image("../template/images/8.png"), 
+  image("../template/images/9.png"),
+  image("../template/images/10.png"), 
+)
+
+]
+
+In a nutshell, our inverted index program successfully passes the first test.
+
+=== Stopwords Test
+
+Then, we should confirm whether our program can eliminate the stopwords we have selected in advance. So we can make a comparison with two test program: one includes the stopwords, while the other doesn't include them.
+
+#table(columns: 1fr, align: left)[Case 1: stopwords included][
+  
+]
+
+=== Single File to Multiple Files Test
+
+== Thresholds for Queries
+
+== Speed Test
 
 == (Maybe)Debug Mode
 
-= Chapter 4: Analysis comments
+= Chapter 4: Analysis and Comments
 
 == Time Complexity
 
@@ -658,7 +1064,24 @@ We'll introduce these functions in detail below.
 
 == File Structure
 
+== invIndexHeader.h
+
+#importCode("../code/scripts/invIndexHeader.h")
+
+== invIndexFunc.cpp
+
+#importCode("../code/scripts/invIndexFunc.cpp")
+
+== invIndexTest.cpp
+
+#importCode("../code/scripts/invIndexTest.cpp")
+
 = References
+
+#show link: underline
+
+#text(size: 10pt)[[1] Blake-Madden, OleanderStemmingLibrary, 
+#link("https://github.com/Blake-Madden/OleanderStemmingLibrary")]
 
 = Declaration
 

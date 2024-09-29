@@ -1,14 +1,10 @@
 # *.typ
 .vscode
-# template
+template
+build
+
 plan.png
 
-*.o
-invIndexTest
 
-shakespeare_works
-shakespeare-master
-changetxt.py
 
-test
-debug
+

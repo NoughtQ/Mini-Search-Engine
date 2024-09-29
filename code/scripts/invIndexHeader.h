@@ -15,8 +15,8 @@
 #define MAXWORDLEN 31                  // The maximum length of a single word(the longest word is about 27 or 28 in Shakespeare's works)
 #define MAXDOCSUM 500000               // The maximum number of documents(files)
 #define MAXREADSTRLEN 101              // The maximum lenght of string for one read
-#define STOPWORDSUM 200                // The maximum number of stop words
-#define STOPWORDPATH "stop_words.txt"  // The path of the file storing stop words
+#define STOPWORDSUM 300                // The maximum number of stop words
+#define STOPWORDPATH "../sources/stop_words.txt"  // The path of the file storing stop words
 #define DEFAULTFILEPOS "tests"         // The default position of the file(for test mode)
 
 // alias
@@ -135,6 +135,8 @@ int FindHashSW(string stopword, HashTb H, bool justSearch);
 void InsertHashSW(string stopword, HashTb H);
 // Hashing function
 int HashFunc(string stopword, int size);
+// Print hash table
+void PrintHashTb(HashTb H);
 
 // Comparison functions used in qsort()
 int cmpData(const void * a, const void * b);     // Compare data of the node in B+ tree
@@ -143,6 +145,9 @@ int cmpNodeBP(const void * a, const void * b);   // Compare the node by their da
 // wstring <-> char *, for word stemming
 std::wstring chararrToWstring(char * st);
 char * wstringToChararr(std::wstring wst);
+
+// Word Stmming wrapper
+void WordStem(string term);
 
 // Print the ticks and duration, for -tr or --time function
 void PrintTime(clock_t start, clock_t end);
