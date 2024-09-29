@@ -22,7 +22,7 @@
 //hash table: {word:wordIdf}
 std::unordered_map<std::wstring, double> wordIdf;
 //hash table: {docId:fileWordCount}
-std::unordered_map<int, int> fileWordsNum;
+std::unordered_map<std::wstring, int> fileWordsNum;
 //hash table: {word:bool}  PS: Bool is just a placeholder and has no actual function.
 std::unordered_map<std::wstring, bool> stopWords;
 stemming::english_stem<> StemEnglish;
@@ -247,8 +247,9 @@ std::vector<std::pair<int,double>> RetrievePL2(PosList L)
     PosData cur = L->front->next;
 
     while (cur != NULL) {
+        std::wstring docName = chararrToWstring(docNames[cur->pos]);
         // calculate tf : tf = word freq/total words in file
-        tf = (double)cur->time / (double)fileWordsNum[cur->pos];
+        tf = (double)cur->time / (double)(fileWordsNum[docName]);
         posVec.push_back({cur->pos, tf});
         cur = cur->next;
     }
@@ -287,7 +288,6 @@ void loadFileWordsNum(std::string filePath)
     std::wifstream infile;
     std::wstring filename;
     int num;
-    int cnt = 0;
     infile.open(filePath,std::ios::in);
     //if the file is empty, return
     if(!infile.is_open())
@@ -295,9 +295,12 @@ void loadFileWordsNum(std::string filePath)
         std::cout << "Error: unable to open file " << filePath << std::endl;
         return;
     }
-    //cnt is valid because it is the same way used in the inverted index construction
+    //read the file name and its word count from the infile
     while(infile >> filename >> num)
-        fileWordsNum[cnt++] = num;
+    {
+        filename += L".txt";
+        fileWordsNum[filename] = num;
+    }
     infile.close();
     std::cout << "The word count of every file loaded successfully." << std::endl;
 }
