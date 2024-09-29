@@ -52,8 +52,13 @@ int main(int argc, char * argv[]) {        // Use command line parameters
     if (!timeRecord) {   // No time record
         InvIndex = InvertedIndex(isTest, containStopWords);
     } else {  // Time record
+        char dir[MAXWORDLEN];
+        strcpy(dir, SHAKESPEAREDIR);
         start = clock();
-        InvIndex = InvertedIndex(isTest, containStopWords);
+        for (i = 0; i < ITERATIONS; i++) {
+            InvIndex = CreateBP();
+            InvIndex = fileTraversaler(InvIndex, dir, NULL, isTest, containStopWords);
+        }
         end = clock();
         PrintTime(start, end);
     }

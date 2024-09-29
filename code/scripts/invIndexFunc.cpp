@@ -48,11 +48,26 @@ void askforFilePos(char * dir, char * fname, bool isTest) {
     if (isTest) {    // If we choose the test mode in the test file, 
         printf("Now testing the correctness of inverted Index:\n");
         printf("Please input the name of the input sample file:\nName: ");
-        scanf("%s", fname);  // then we should input the filename
+        scanf("%s", fname);   // we should input the filename
     } else {         // Otherwise(in the main program or other default situations), 
+        char choice[MAXWORDLEN];
+        strcpy(dir, SHAKESPEAREDIR);       // Default path
         printf("Now building an inverted Index:\n");
-        printf("Please input the directory of the documents:\nPath: ");
-        scanf("%s", dir);    // we should input the name of the directory
+        printf("Do you want to search something in the default path(%s)?\n", dir);
+        printf("Please input yes or no: ");
+        scanf("%s", choice);          // Input your choice
+        switch (choice[0]) {
+            case 'y': case 'Y':       // Yes
+                break;
+            case 'n': case 'N':       // No
+                printf("\nPlease input the directory of the documents:\nPath: ");
+                scanf("%s", dir);    // We should input the name of the directory
+                break;
+            default:                  // Choice error
+                printf("Choice Error!\n");
+                exit(1);
+                break;
+        }
     }
 }
 
@@ -723,9 +738,12 @@ string WordStem(string term) {
 void PrintTime(clock_t start, clock_t end) {
     clock_t tick;       // ticks
     double duration;    // duration(unit: seconds)
+    int iterations;
 
+    iterations = ITERATIONS;
     tick = end - start;
     duration = ((double)(tick)) / CLOCKS_PER_SEC;
+    printf("Iterations: %d\n", iterations);
     printf("Ticks: %lu\n", (long)tick);    // Print the info
     printf("Duration: %.2fs\n", duration);
 }
