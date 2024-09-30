@@ -19,7 +19,8 @@
 #define STOPWORDPATH "../source/stop_words.txt"  // The path of the file storing stop words
 #define DEFAULTFILEPOS "../source/tests"         // The default position of the file(for test mode)
 #define SHAKESPEAREDIR "../source/shakespeare_works"
-#define ITERATIONS 1
+#define IISPEEDTESTDIR "../source/tests/invIndex-speedTest/880000"
+#define ITERATIONS 5
 
 // alias
 typedef char * string;

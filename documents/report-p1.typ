@@ -64,13 +64,81 @@ In the following sections, I will introduce these algorithms from top to down, b
 
 == The Main Program
 
-== Word Count
+== Word Count & Stop Words
 
-== Stop Words
+#v(.5em)
+
+#let render(theme_name) = [
+  #state_block_theme.update(theme_name)
+
+  #note(name: [Note])[
+    Because the original open resources of _The Works_ are written in HTML format with too many markups, we have converted them into TXT format, which is more readable and convenient for us to handle. And all titles of these articles are extracted to a TXT file at the same time.
+  ]
+
+  #v(1em)
+]
+#render("thickness")
+
+The word count and stop words detection are relatively simple, we combined their functions into one program to cope with problems together. 
+
+#algo(
+  header: [
+    #fakebold[Inputs]: No obvious input parameters, but the program will read in: 
+    
+    - A file(`code/source/txt_title.txt`) contains all titles of articles in _The Works_
+    - A directory(`code/source/shakespeare_work`) includes _The Works_ in TXT format
+
+    #fakebold[Outputs]: 3 files
+
+    - `code/source/stop_words.txt`: Record all selected stopwords
+    - `code/source/word_count.txt`: Count for each word in all files
+    - `code/source/word_docs.txt`: Count the words for each file
+
+    #fakebold[Procedure]: getStopWord() 
+  ],
+  block-align: left,
+)[
+  Begin #i\ 
+    Read in the file `txt_title.txt` as _infile_\
+    Prepare the output file (_outfile_) named `file_word_count.txt` \
+    while reading in the content of _infile_ do #i\
+      #comment[_file_: one line content in _infile_, i.e. the title of each file] \
+      Read in the file `"shakespeare_works/"` + _file_ + `".txt"` as _in_ \
+      while reading each line(_line_) in file _in_ do #i\
+        if find an English word (called _word_) then #i\
+          Do word stemming \
+          _wordList_[_word_] $<-$ _wordList_[_word_] + 1 \
+          _wordNumOfDoc_[_file_] $<-$ _wordNumOfDoc_[_file_] + 1\
+          _wordDocs_[_word_] $<-$ _file_ #d\
+        endif #d\
+      end \
+
+      Output the _wordNumOfDoc_ to _outfile_ \
+      closefile(_in_) #d\
+    end \
+
+    closefile(_infile_) \
+    Sort(_wordDocs_)
+    Prepare the output file (_out_) named `word_count.txt` \
+    Prepare the output file (_out2_) named `stop_words.txt` \
+    Prepare the output file (_out3_) named `word_docs.txt` \
+
+    for each item(_word_) in _wordDocs_ do #i\
+      Output the _word_$->$_content_ and _word_$->$_frequency_ to _out3_ \
+      if _word_$->$_frequency_ > _THRESHOLD_ then #i\
+        Output the _word_$->$_content_ to _out2_ #d\
+      endif \
+      Output the _word_$->$_content_ and _wordList_[_word_$->$_content_] to _out_ #d\
+    end \
+    closefile(_out_) \
+    closefile(_out2_) \   
+    closefile(_out3_) #d\ 
+  End
+]
 
 == Word Stemming 
 
-We tap into the codes from a GitHub repository called "OleanderStemmingLibrary" by the author Blake-Madden. The codes are stored in the directory `code/wordStem`, and the link of repository is listed in the *References* section below.
+We tap into the codes from a GitHub repository called "OleanderStemmingLibrary" by the author Blake-Madden. The codes are stored in the directory `code/scripts/wordStem`, and the link of repository is listed in the *References* section below.
 
 #let render(theme_name) = [
   #state_block_theme.update(theme_name)
@@ -154,15 +222,30 @@ We'll introduce these functions in detail below.
   block-align: left,
 )[
   Begin #i\ 
-  if _isTest_ is true then #i\
-    print("Now testing the correctness of inverted Index:") \
-    print("Please input the name of the input sample file:") \
-    input("Name:", _fname_) #d\
-  else #i\
-    print("Now building an inverted Index:") \
-    print("Please input the directory of the documents:") \
-    input("Path:", _dir_) #d\
-  endif #d\
+    if _isTest_ is true then #i\
+      print("Now testing the correctness of inverted Index:") \
+      print("Please input the name of the input sample file:") \
+      input("Name:", _fname_) #d\
+    else #i\
+      _dir_ $<-$ _SHAKESPEAREDIR_ \
+      print("Now building an inverted Index:") \
+      print("Do you want to search something in the default path({_dir_})?") \ 
+      print("Please input yes or no: ") \
+      input(_choice_) \
+      switch _choice_ #i\
+        case 'y': case 'Y': #i\
+          break #d\
+        case 'n': case 'N': #i\
+          print("Please input the directory of the documents:") \
+          print("Path: ") \
+          input(_dir_) \
+          break #d\
+        default: #i\
+          print("Choice Error!") \
+          exit(1) \
+          break #d\
+      end #d\
+    endif #d\
   End
 ]
 
@@ -916,8 +999,19 @@ We'll introduce these functions in detail below.
 To verify the correctness of our inverted index, we have devised several tests from different aspects. Here is the #fakebold[purpose] of each test: 
 
 - Check if every word in document(s) is inserted into the inverted index correctly.
-- Check if the inverted index can kick off all stopwords.
 - Build an inverted index from a single file, or a directory with a bunch of files.
+- Check if the inverted index can eliminate all stopwords.
+
+#let render(theme_name) = [
+  #state_block_theme.update(theme_name)
+
+  #warning(name: [Warning])[
+    In the following tests, we will use the test programs to verify the correctness of our sub-programs seperately, and we #fakebold[won't tell you the usage of these intructions] we use below. If you are curious about it, please read the `README.md` file in the directory `code`, which will guide you how to run these instructions.
+  ]
+
+  #v(1em)
+]
+#render("thickness")
 
 === Word Insertion Test
 
@@ -971,7 +1065,7 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam nec erat sed nul
 
   #note(name: [Note])[
     - This test is just used in checking the correctness of word insertion, which is similar to a simple query function, but the implementation is totally different from our formal query program, so you shouldn't mix them together.
-    - The texts in the following tests are too long, therefore we won't show these text in our report, but you can see them in the files positioned in the directory called `code/tests`.
+    - The texts in the following tests are too long, therefore we won't show these text in our report, but you can see them in the files positioned in the directory called `code/source/tests`.
   ]
 
   #v(1em)
@@ -1036,33 +1130,281 @@ Find 3: fantastic
 
 ]
 
-In a nutshell, our inverted index program successfully passes the first test.
+In a nutshell, our inverted index program successfully #text(fill: green)[passes] the first test.
+
+=== Single File to Multiple Files Test
+
+We executed our first test based on a single file and several files,  but our ultimate goal is to let our mini search engine to search something from a dozens of files(i.e. _the Complete Works of Shakespeare_). So it's necessary for us to test whether the inverted index can be built from tons of files. Note that `the Works` is in the directory called `code/source/shakespeare_works`.
+
+#table(columns: 1fr, align: left)[Case 1: Search some dedicated words from piles of files][
+```bash ./invIndexTest -f=3``` \
+`Now building an inverted Index:
+Please input the directory of the documents:
+Path:` ```bash ../source/shakespeare_works``` \
+`Build successfully!
+
+Finding Words Mode(only supports single word finding):
+Find 1:` ```bash hamlet``` \
+`Successfully find the word!
+The word was found in files below:
+hamlet.1.1.txt: 3 times
+hamlet.1.2.txt: 42 times`
+```bash
+# Deleberate omisssion
+```
+`hamlet.5.1.txt: 45 times
+hamlet.5.2.txt: 83 times
+Frequency: 470
+-----------------------------------
+Find 2:` ```bash juliet``` \
+`Successfully find the word!
+The word was found in files below:
+measure.1.2.txt: 3 times
+measure.1.4.txt: 1 time`
+```bash
+# Deleberate omisssion
+```
+`romeo_juliet.5.2.txt: 1 time
+romeo_juliet.5.3.txt: 19 times
+Frequency: 199
+-----------------------------------
+Find 3:` ```bash macbeth``` \
+`Successfully find the word!
+The word was found in files below:
+macbeth.1.1.txt: 1 time
+macbeth.1.2.txt: 4 times`
+```bash
+# Deleberate omisssion
+```
+`macbeth.5.7.txt: 8 times
+macbeth.5.8.txt: 7 times
+Frequency: 285
+-----------------------------------`
+]
+
+
+#table(columns: 1fr, align: left)[Case 2: Search some universal words from piles of files][
+```bash ./invIndexTest -f=3``` \
+`Now building an inverted Index:
+Please input the directory of the documents:
+Path:` ```bash ../source/shakespeare_works``` \
+`Build successfully!
+
+Finding Words Mode(only supports single word finding):
+Find 1:` ```bash moon``` \
+`Successfully find the word!
+The word was found in files below:
+1henryiv.1.2.txt: 5 times
+1henryiv.1.3.txt: 1 time`
+```bash
+# Deleberate omisssion
+```
+`winters_tale.4.3.txt: 1 time
+winters_tale.4.4.txt: 1 time
+Frequency: 152
+-----------------------------------
+Find 2:` ```bash happy``` \
+`Successfully find the word!
+The word was found in files below:
+1henryiv.2.2.txt: 1 time
+1henryiv.4.3.txt: 1 time`
+```bash
+# Deleberate omisssion
+```
+`winters_tale.1.2.txt: 2 times
+winters_tale.4.4.txt: 3 times
+Frequency: 278
+-----------------------------------
+Find 3:` ```bash hit``` \
+`Successfully find the word!
+The word was found in files below:
+1henryiv.2.4.txt: 1 time
+2henryiv.1.1.txt: 1 time`
+```bash
+# Deleberate omisssion
+```
+`VenusAndAdonis.txt: 2 times
+winters_tale.5.1.txt: 1 time
+Frequency: 74
+-----------------------------------`  
+]
+
+In a nutshell, our inverted index program successfully #text(fill: green)[passes] the second test.
 
 === Stopwords Test
 
-Then, we should confirm whether our program can eliminate the stopwords we have selected in advance. So we can make a comparison with two test program: one includes the stopwords, while the other doesn't include them.
+Finally, we should confirm whether our program can eliminate the stopwords we have selected in advance. So we can make a comparison with two test program: one includes the stopwords, while the other doesn't include them.
 
-#table(columns: 1fr, align: left)[Case 1: stopwords included][
-  
+#table(columns: 1fr, align: left)[Case 1: stopwords #fakebold[not included]\(defualt situation\)][
+```bash ./invIndexTest -f=3``` \
+`Now building an inverted Index:
+Please input the directory of the documents:
+Path:` ```bash ../source/shakespeare_works``` \
+`Build successfully!
+
+Finding Words Mode(only supports single word finding):
+Find 1:` ```bash much``` \
+`Sorry, no such word in the inverted index!
+-----------------------------------
+Find 2:` ```bash you``` \
+`Sorry, no such word in the inverted index!
+-----------------------------------
+Find 3:` ```bash great``` \
+`Sorry, no such word in the inverted index!
+-----------------------------------`
 ]
 
-=== Single File to Multiple Files Test
+#table(columns: 1fr, align: left)[Case 2: stopwords #fakebold[included]][
+```bash ./invIndexTest -f=3 -s``` \
+`Now building an inverted Index:
+Please input the directory of the documents:
+Path:` ```bash ../source/shakespeare_works``` 
+```bash
+# Delebrate omission for the display of all stopwords
+```
+`Build successfully!
+
+Finding Words Mode(only supports single word finding):
+Find 1:` ```bash much``` 
+```bash
+# Delebrate omission for the very long position list
+```
+`winters_tale.5.1.txt: 4 times
+winters_tale.5.2.txt: 2 times
+winters_tale.5.3.txt: 7 times
+Frequency: 1070
+-----------------------------------
+Find 2:` ```bash you``` 
+```bash
+# Delebrate omission for the very long position list
+```
+`winters_tale.5.1.txt: 40 times
+winters_tale.5.2.txt: 19 times
+winters_tale.5.3.txt: 29 times
+Frequency: 14249
+-----------------------------------
+Find 3:` ```bash great``` 
+```bash
+# Delebrate omission for the very long position list
+```
+`winters_tale.5.1.txt: 3 times
+winters_tale.5.2.txt: 1 time
+winters_tale.5.3.txt: 1 time
+Frequency: 1032
+-----------------------------------`
+]
+
+Actually, the inverted index can eliminate all stopwords, but due to space limitation, we won't list all tests about them.
+
+In a nutshell, our inverted index program successfully #text(fill: green)[passes] the third test.
+
+Although we can't make a thorough test for the inverted index, but from the above tests, we can assure that our inverted index have no obvious error(maybe there're several small bugs existing).
 
 == Thresholds for Queries
 
 == Speed Test
 
-== (Maybe)Debug Mode
+#v(.5em)
+
+#let render(theme_name) = [
+  #state_block_theme.update(theme_name)
+
+  #note(name: [Note])[
+    The specific analysis and comments about speed tests are written in *Chapter 4*.
+  ]
+
+  #v(1em)
+]
+#render("thickness")
+
+=== Inverted Index
+
+To analyze the time complexity of the inverted index, especially the algorithms regarding the #fakebold[finding] and #fakebold[insertion] operations of B+ tree, we devise some timing tests for #fakebold[diffrent numbers of words] in _The Works_. The results are shown below:
+
+#figure(
+  table(columns: (9em, 1fr, 1fr, 1fr, 1fr, 1fr, 1fr), [Number of Words(roughly)], [100,000], [200,000], [400,000], [600,000], [800,000], [880,000], [Iterations], [10], [10], [10], [10], [5], [5], [Ticks], [1988219], [3704927], [7317245], [11594770], [7985568], [8438331], [Total Time(s)], [1.99], [3.70], [7.32], [11.59], [7.99], [8.44], [Duration(s)], [0.199], [0.370], [0.732], [1.159], [1.598], [1.688]), caption: "Speed Tests for Inverted Index"
+)
+
+#figure(
+  image("../template/images/iist_diagram.png", width: 120%), caption: "Curve Chart of the Speed Tests for Inverted Index"
+)
+
+As you can see, these data points can be fitted with the product of linear function and #fakebold[logarithmic function] (although the curve looks like a straight line due to the limitation of aspect ratio). So the result indicates that the time complexity of building inverted index approaches O($log N$), and you will see the detailed explanation in Chapter 4.
+
+
+=== Queries
 
 = Chapter 4: Analysis and Comments
 
-== Time Complexity
+#let render(theme_name) = [
+  #state_block_theme.update(theme_name)
+
+  #note(name: [Note])[
+    - We only care the memory space of #fakebold[major] data structures
+    - It's undeniable that every word has different length, but we set the smallest unit to "word", not "character" for our convenience of analysis 
+  ]
+
+  #v(1em)
+]
+#render("thickness")
 
 == Space Complexity
+
+*Conclusion*: $O$(`WC` + `DocNum` + `HS` + `IN`)
+
+- `WC`: Word count all articles in _The Works_
+- `DocNum`: The number of documents(files, or articles in _The Works_)
+- `HS`: The size of the hash table which contains all stopwords
+- `IN`: The size of the inverted index(notice: we have removed the duplicated words, so every two nodes contain distinct words)
+
+*Analysis*: 
+
+We should analyze the space complexity step by step:
+
+- #fakebold[Word count]: We use C++ STL containers(`pair`, `map` and `set`) to store the essential information about words and files. Specifically, `wordList` records the word count in all files for every word; `wordNumOfDoc` involves the word count for every file; `wordDocs` contains the number of articles where words apppear for every word. Consequently, the memory space in this step depends on both word count in all files(`WC`) and the number of files(`DocNum`).
+
+- #fakebold[Stop words]: Actually, in the word count program, we also extracted the stop words from the variables mentioned above, then these words will be stored in a hash table for fast finding when building the inverted index. Therefore, the size of hash table(`HS`) represents the space that stopwords use.
+
+- #fakebold[Inverted index]: The bulk of inverted index is stored in a B+ tree. It's universally acknowledged that the space complexity of B+ tree is $O(N)$, when $N$ is the number of data. However, our program has some uncertain factors, for instance, we can't control the size of the position list for each word, because the specific frequency of words are different. But what we can assure is that the total size of all position list is proportional to unduplicated word count, which is less than `WC`. As a consequence, we only care `IN` = $N times$ `ORDER`, where `ORDER` means the order of the B+ tree, and we allocate `ORDER + 1` bytes for data and children in each node.  
+- #fakebold[Query]:
+
+To sum up, the space complexity of our program is $O$(`WC` + `DocNum` + `HS` + `IN`).
+
+
+== Time Complexity
+
+*Conclusion*: $O$(`WC` + `IN` $log$ `IN` + ) 
+
+- `WC`: Word count all articles in _The Works_
+- `IN`: The size of the inverted index
+
+*Analysis*:
+
+- #fakebold[Word count and stop words]: Apparently, we count and handle every word in all files to implement the functions of word count and stop words detection. Therefore, the time complexity of this part is proportional to `WC`, which is mentioned above.
+
+- #fakebold[Inverted Index]: The most frequent operations we have run in the inverted index are insertion and finding, so we consider these operations mainly. It's proved that the efficiency is $O(log N)$ for both insertion and finding, and for every node we should execute these operations at least once. Consequently, the whole time complexity of building inverted index is $O$(`IN` $log$ `IN`). Additionally, in our speed test above, we have drawn the curve chart of it, which can be fitted with $a + b dot N log N$ function, which proves the correctness of our analysis further.
+
+- #fakebold[Query]:
+
+In a nutshell, the time complexity of our program is $O$(`WC` + `IN` $log$ `IN` + ).
+
+== Further Improvement
+
+#v(.5em)
+
+1. #fakebold[Algorithm refinement]: So far, we have learned few of the efficient algorithms and data structures, which means that our implementation of the mini search engine might not be the best practice. However, it's possible for us to devised more ingenious and efficient procedure to cope with this problem after we systematically learned more excellent algorithms and data structrues.
+
+2. #fakebold[Testing construction]: Although we come up with some testing cases, probably some crucial tests are still lost owing to our incomplete consideration. From our standpoint, it's difficult to find all typical cases for a program, but we're fully convinced that by delicate techniques and tricks for testing results, we can come up with tests as complete as possible.
+
+3. #fakebold[Complexity analysis]: As you can see, it's awkward to analyze the complexity of some programs such as the space complexity of position list in nodes of inverted index. As a consequence, our analysis on complexity isn't very accurate. We will study the systematic method of analyzing the complexity and improve the precision of our analysis in the foreseeable future.
 
 = Appendix: Source code
 
 == File Structure
+
+== getStopWord.cpp
+
+#importCode("../code/scripts/getStopWord.cpp")
 
 == invIndexHeader.h
 

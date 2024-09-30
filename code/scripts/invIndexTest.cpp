@@ -52,8 +52,8 @@ int main(int argc, char * argv[]) {        // Use command line parameters
     if (!timeRecord) {   // No time record
         InvIndex = InvertedIndex(isTest, containStopWords);
     } else {  // Time record
-        char dir[MAXWORDLEN];
-        strcpy(dir, SHAKESPEAREDIR);
+        char dir[MAXREADSTRLEN];
+        strcpy(dir, IISPEEDTESTDIR);
         start = clock();
         for (i = 0; i < ITERATIONS; i++) {
             InvIndex = CreateBP();

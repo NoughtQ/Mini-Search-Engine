@@ -73,8 +73,7 @@ int main()
     for(Pair &word : vec)
     {
         out3 << word.first << " " << word.second.size() << endl;
-        // 1115 * 0.3 = 334.5, so I choose 334 as the threshold to get the stop words
-        // But to be honest, the threshold of 0.3 has no scientific basis.
+        // To be honest, the threshold of stop words has no scientific basis.
         if(word.second.size() >= 334)
             out2 << word.first << endl; // stop words
         out << word.first << " " << wordList[word.first] << endl;   // word count
@@ -86,5 +85,5 @@ int main()
 
 // To compile the program, run the following command in the terminal:
 // Depends on where you are, maybe you need to change the path accordingly.
-// (I assume you are in code/scripts)
-// g++ -o getstopwords/getStopWord getstopwords/getStopWord.cpp -Werror -Wall -Wextra 
+// (I assume you are in the main dictionary of the project)
+// g++ -o code/scripts/getstopwords/getStopWord code/scripts/getstopwords/getStopWord.cpp -Werror -Wall -Wextra 
