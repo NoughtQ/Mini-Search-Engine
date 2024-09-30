@@ -27,7 +27,7 @@ stopwords:
 
 .PHONY : clean
 clean :
-	rm -f $(II_TEST) $(OBJS)
+	rm -f $(II_TEST) $(II_OBJS)
 
 
 

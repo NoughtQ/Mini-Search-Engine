@@ -49,8 +49,32 @@ Here are some specific requirements:
 #v(.5em)
 
 1. *B+ Trees*: It's an improved version of search trees, widely used in the relational database and file management in operating systems. We will use this data structure to store and access to the inverted index.
+
 2. *Hashing*: Hash tables have an excellent performance in searching data(only cost O(1) time), hence we take advantage of this data structure for finding stopwords when building an inverted index.
+
 3. *Queue*: The Queue ADT is one of the most basic data structrues used in printing the B+ tree, storing the positions for terms, etc.
+
+4. *TF-IDF Algorithm*: 
+
+*tf–idf* (also *TF\*IDF*, *TFIDF*, *TF–IDF*, or *Tf–idf*), short for *term frequency–inverse document frequency*, is a measure of importance of a word to a document in a collection or corpus, adjusted for the fact that some words appear more frequently in general.
+
+It was often used as a weighting factor in searches of information retrieval, text mining, and user modeling.
+
+One of the simplest ranking functions is computed by summing the tf–idf for each query term; many more sophisticated ranking functions are variants of this simple model.
+
+There are many variations of how tf-idf is calculated. In our project, we use the following formula to calculate tf , idf and tf-idf.
+
+$
+"tf"("word", "doc") = frac("num of word in the doc", "total word count of the doc")
+$
+
+$
+"idf"("word", "doc") = log frac("total num of documents", 1+ |"num of documents that include the word"|)
+$
+
+$
+"ti-idf"("word", "doc") = "tf" times "idf"
+$
 
 #v(1.5em)
 
@@ -60,9 +84,67 @@ Here are some specific requirements:
 
 The overall algorithm architecture in the program is shown below:
 
-In the following sections, I will introduce these algorithms from top to down, but with some slight adjustement, in the hope that you can gain a deeper insight into my whole program.
+#table(columns: 1fr, align: left)[
+
+```
+the main program
+├── word count
+├── stop words
+├── inverted index
+│   ├── askforFilePos
+│   └── fileTraversaler
+│       ├── generate B+ tree
+│       │   ├── CreateBP
+│       │   ├── FindBP
+│       │   │   └──isSameTerm
+│       │   ├── InsertBP
+│       │   ├── SplitBP
+│       │   └── PrintBPTree
+│       └── generate hash table
+│           ├── InitHashTb
+│           ├── FindHashSW
+│           ├── InsertHashSW
+│           ├── HashFunc
+│           └── PrintHashTb
+└── search
+    ├── loadWordIdf
+    ├── loadFileWordsNum
+    └── loadStopWords
+```
+]
 
 == The Main Program
+
+#algo(
+  header: [
+    #fakebold[Inputs]: 
+    
+    - All files of _The Complete Works of Shakespeare_
+    - User's queries
+
+    #fakebold[Outputs]: 
+
+    - The results of queries
+
+    #fakebold[Procedure]: main()
+  ],
+  block-align: left,
+  strong-keywords: false
+)[
+*Begin* #i\ 
+  load necessary resources and establish inverted index \
+
+  set values for pageSize and threshold from user input \
+
+  *while* search_allow *do* #i\
+      get query from user input \
+      Calling the search function \
+      ask user if they want to continue searching or not and set search_allow accordingly #d\
+  *end* #d\
+*End*
+]
+
+The main idea of the code is to serve as the entry point for a search application named "ShakespeareFinder." It involves loading required resources, setting up an inverted index, and managing user queries.
 
 == Word Count & Stop Words
 
@@ -992,9 +1074,129 @@ We'll introduce these functions in detail below.
 
 == Query
 
+=== Search Function
+
+#algo(
+  header: [
+    #fakebold[Inputs]:
+
+    - _query_: User's query in string form
+    - _T_: Inverted index
+    - _pageSize_: Number of documents to be displayed per query
+    - _threshold_: The proportion of search terms to the total number of terms
+
+    #fakebold[Outputs]: The query result
+
+    #fakebold[Procedure]: search(_query_: #fakebold[string], _T_: #fakebold[BplusTree], _pageSize_: #fakebold[integer], _threshold_: #fakebold[double])
+  ],
+  block-align: left,
+)[
+Begin #i\ 
+
+  for read every character in _query_ do #i\
+    remove the Punctuation and Whitespace \
+    if get the word then #i\
+      store the word itself and the _idf_ of word in a vector #d\
+    endif #d\
+  end \
+  
+  sort the vector in descending order \
+
+  if no word then #i\
+    return #d\
+  else if one word then #i\
+    search the word in _T_ \
+    sort the file name by _tf_ \
+    print(_file_, _tf_) #d\
+  else #i\
+    according to the threshold get the word needed to searched \
+    for every word do #i\
+      search the word in _T_ \
+      store the result in a hash table \
+      (the hash table store the file name and their _tf-idf_) #d\
+    end \
+    print(_file_, _td-idf_) #d\
+  endif #d\
+End
+]
+
+The main idea of the function is to implement a search functionality that retrieves documents related to a given query from a B+ tree. Here is a more detailed summary of the function logic:
+
+1. *Query parsing*: The code starts by loading and analyzing the query string, breaking it down into words while converting each to lowercase and stemming. It checks if each word exists in a stop words list or if it is present in the inverted index.
+
+2. *Valid word collection*: Valid words are added to a vector, while warnings are displayed for invalid words (such as stop words or words not found in the inverted index).
+
+3. *Search condition assessment*: Depending on the number of valid words, the processing is divided into two modes. If there is only one valid word, it searches directly in the inverted index and returns the matching documents with their TF values. For multiple valid words, the code calculates their TF-IDF values.
+
+4. *Inverted index lookup*: For multi-word queries, the code traverses the inverted index for each valid word, using a hash table to store document IDs and their corresponding TF-IDF scores while ensuring it only retains documents that contain all the query words.
+
+5. *Result sorting and output*: Finally, the results are sorted based on the TF-IDF values, and the document names along with their TF-IDF scores are printed, adhering to a specified limit on the number of results (page size).
+
+Overall, this function provides an efficient document retrieval mechanism through valid word filtering and TF-IDF score calculation, suitable for the context of search engines or information retrieval systems.
+
+=== Search Test
+
+#algo(
+  header: [
+    #fakebold[Inputs]: Files of _The Works_
+
+    #fakebold[Outputs]: The results of queries
+
+    #fakebold[Procedure]: SearchTest()
+  ],
+  block-align: left,
+  strong-keywords: false
+)[
+*Begin* #i\ 
+  load necessary resources and establish inverted index \
+
+  *while* test_allow *do* #i\
+    get serial number of the test input form user \
+ 
+    get the query from the input file \
+
+    get important parameters from user's input \
+
+    call the search function with the query and parameters \
+
+    ask user if they want to continue testing or not and set test_allow accordingly #d\
+  *end* #d\
+*End*
+]
+
+The main idea of the code is to set up a testing framework for the "ShakespeareFinder" search application. This includes loading necessary resources, allowing users to input parameters from a test file, executing search queries multiple times to evaluate performance, and managing repeated tests.
+
+=== Some helper functions
+
+*(1) Load function: loadWordIdf & loadFileWordsNum & loadStopWords*
+
+These functions have a similar structure. The main idea is to load resources from existing files. See the pseudocode for details.
+
+#algo(
+  header: [
+    #fakebold[Inputs]: Files of _The Works_
+
+    #fakebold[Outputs]: The results of queries
+
+    #fakebold[Procedure]: SearchTest()
+  ],
+  block-align: left,
+  strong-keywords: false
+)[
+*Begin* #i\ 
+  load the input FILE \
+  read resource from the file \
+  load the resource into a hash table #d\
+*End*
+]
+
+*(2) Search helper: FindBP2 & isSameTerm2 & RetrievePL2*
+
+These functions are very similar to their versions without the "2", but in order to better cooperate with the search function, the type of data they return is changed to `vector<pair<docId, tf>>`, and the logic of getting data is changed accordingly.
+
 = Chapter 3: Testing Results
 
-== Inverted Index
+== Inverted Index Tests
 
 To verify the correctness of our inverted index, we have devised several tests from different aspects. Here is the #fakebold[purpose] of each test: 
 
@@ -1300,9 +1502,8 @@ In a nutshell, our inverted index program successfully #text(fill: green)[passes
 
 Although we can't make a thorough test for the inverted index, but from the above tests, we can assure that our inverted index have no obvious error(maybe there're several small bugs existing).
 
-== Thresholds for Queries
 
-== Speed Test
+=== Speed Test
 
 #v(.5em)
 
@@ -1317,12 +1518,16 @@ Although we can't make a thorough test for the inverted index, but from the abov
 ]
 #render("thickness")
 
-=== Inverted Index
-
 To analyze the time complexity of the inverted index, especially the algorithms regarding the #fakebold[finding] and #fakebold[insertion] operations of B+ tree, we devise some timing tests for #fakebold[diffrent numbers of words] in _The Works_. The results are shown below:
 
+
 #figure(
-  table(columns: (9em, 1fr, 1fr, 1fr, 1fr, 1fr, 1fr), [Number of Words(roughly)], [100,000], [200,000], [400,000], [600,000], [800,000], [880,000], [Iterations], [10], [10], [10], [10], [5], [5], [Ticks], [1988219], [3704927], [7317245], [11594770], [7985568], [8438331], [Total Time(s)], [1.99], [3.70], [7.32], [11.59], [7.99], [8.44], [Duration(s)], [0.199], [0.370], [0.732], [1.159], [1.598], [1.688]), caption: "Speed Tests for Inverted Index"
+  table( 
+    fill: (x, y) =>
+    if x == 0 {
+      gray.lighten(80%)
+    },
+    columns: (9em, 1fr, 1fr, 1fr, 1fr, 1fr, 1fr), [Number of Words(roughly)], [100,000], [200,000], [400,000], [600,000], [800,000], [880,000], [Iterations], [10], [10], [10], [10], [5], [5], [Ticks], [1988219], [3704927], [7317245], [11594770], [7985568], [8438331], [Total Time(s)], [1.99], [3.70], [7.32], [11.59], [7.99], [8.44], [Duration(s)], [0.199], [0.370], [0.732], [1.159], [1.598], [1.688]), caption: "Speed Tests for Inverted Index"
 )
 
 #figure(
@@ -1332,9 +1537,254 @@ To analyze the time complexity of the inverted index, especially the algorithms 
 As you can see, these data points can be fitted with the product of linear function and #fakebold[logarithmic function] (although the curve looks like a straight line due to the limitation of aspect ratio). So the result indicates that the time complexity of building inverted index approaches O($log N$), and you will see the detailed explanation in Chapter 4.
 
 
-=== Queries
+== Query Tests
+
+Different from the oriented-procedure inverted index tests, the query tests are based on distinct and typical #fakebold[input data], which consider the performance, speed and threshold analysis simultaneously.
+
+
+
+=== input0
+
+#v(.5em)
+
+- *content* : 1000\*'a'
+- *purpose*: Test for illegal words of extreme length
+- *expected results*:
+
+  #table(align: left, columns: 1fr)[
+    ```shell
+    Warning: "a...a" is not in the inverted index and will be ignored.
+    Ops, your query is in StopList or empty, so there are no documents retrieved.
+    ```
+  ]
+
+- *test results*:
+
+  #set table(
+    fill: (x, y) =>
+      if y == 0 {
+        gray.lighten(80%)
+      },
+  )
+
+  #show table.cell.where(y: 0): fakebold
+
+  #table(columns: (8em, 1fr, 1fr), table.header([output],[ticks(ticks/search)],[time(s/search)]))[correct][155.835][1.6e-4]
+
+  The time is averaged from 1000 runs. Since irrelevant words will not enter the search phase, the threshold is irrelevant to this test.
+
+=== input1
+
+#v(.5em)
+
+- *content* : peas and beans
+
+- *purpose*: One stop word, two rare words (each appearing in only two documents), but all appearing in one document. This tests the retrieval correctness of the program and its handling of stop words.
+
+- *expected results*：
+  
+  #table(align: left, columns: 1fr)[
+    ```shell
+    Warning: "and" is in the stop list and will be ignored.
+    Your query has multiple valid words, so we will search for them in the inverted index.
+    The words were found in files below:
+    File name                       Tf-Idf
+    1henryiv.2.1.txt                0.014780
+    ```
+  ]
+
+- *test result*:
+  
+  #set table(
+    fill: (x, y) =>
+      if y == 0 {
+        gray.lighten(80%)
+      },
+  )
+
+  #show table.cell.where(y: 0): fakebold  
+
+  #table(columns: (8em, 1fr, 1fr), table.header([output],[ticks(ticks/search)],[time(s/search)]))[correct][79.439][8e-5]
+
+  The time is averaged from 1000 runs. Since the test purpose does not include the threshold, the threshold is set to 1 here.
+
+=== input2
+
+#v(.5em)
+
+- *content* : blank input
+
+- *purpose*: Testing for blank input
+
+- *expected results*：
+
+  #table(align: left, columns: 1fr)[
+    ```shell
+    Ops, your query is in StopList or empty, so there are no documents retrieved. 
+    ```
+  ]
+
+- *Test result*
+
+  
+  #set table(
+    fill: (x, y) =>
+      if y == 0 {
+        gray.lighten(80%)
+      },
+  )
+
+  #show table.cell.where(y: 0): fakebold  
+
+  #table(columns: (8em, 1fr, 1fr), table.header([output],[ticks(ticks/search)],[time(s/search)]))[correct][15.246][2e-5]  
+  
+  The time is averaged from 1000 runs.Since irrelevant words will not enter the search phase, the threshold is irrelevant to this test.
+
+=== input3
+
+#v(.5em)
+
+- *content* : three stop words
+
+- *purpose*: Testing for stop words
+
+- *expected results*：
+  
+  #table(align: left, columns: 1fr)[
+    ```shell
+    Warning: "call" is in the stop list and will be ignored.
+    Warning: "other" is in the stop list and will be ignored.
+    Warning: "man" is in the stop list and will be ignored.
+    Ops, your query is in StopList or empty, so there are no documents retrieved. 
+    ```
+  ]
+
+- *test result*:
+  
+  #set table(
+    fill: (x, y) =>
+      if y == 0 {
+        gray.lighten(80%)
+      },
+  )
+
+  #show table.cell.where(y: 0): fakebold  
+
+  #table(columns: (8em, 1fr, 1fr), table.header([output],[ticks(ticks/search)],[time(s/search)]))[correct][51.027][5e-5]    
+  
+  The time is averaged from 1000 runs.Since irrelevant words will not enter the search phase, the threshold is irrelevant to this test.
+
+=== input4
+
+#v(.5em)
+
+- *content* : Complete 1henryiv.1.2
+
+- *purpose*: Test detection of extreme length correct text. Test the performance of searches at different thresholds
+
+- *expected results*(threshold=1.0):
+  
+  #table(align: left, columns: 1fr)[
+    ```shell
+    Warning:...
+    ...(omit numorous warning about stop words)
+    Your query has multiple valid words, so we will search for them in the inverted index.
+    The words were found in files below:
+    File name                       Tf-Idf
+    1henryiv.1.2.txt                5.785513
+    ```
+  ]
+
+- *test result*:
+
+  #set table(
+    fill: (x, y) =>
+      if y == 0 {
+        gray.lighten(80%)
+      },
+  )
+
+  #show table.cell.where(y: 0): fakebold  
+
+  #table(columns: (8em, 1fr, 1fr), table.header([output],[ticks(ticks/search)],[time(s/search)]))[correct][129114.1][0.13]
+
+  The time is averaged from 10 runs, and `threshold=1`
+  
+  #set table(
+    fill: (x, y) =>
+      if y == 0 {
+        gray.lighten(80%)
+      },
+  )
+
+  #show table.cell.where(y: 0): fakebold  
+
+  #table(columns: (1fr, 1fr, 1fr, 1fr), table.header([threshold],[rank],[tf-idf], [search time]))[0.01][1/1][0.024940][0.02]
+
+  No more thresholds were tested here because the situation was too extreme and the correct documents were already filtered out at a threshold of 0.01.Increasing the threshold will only increase the running time, so it is not tested here..
+
+=== input5
+
+#v(.5em)
+
+- *content* : All sects, all ages smack of this vice; and he To die for't!
+
+- *purpose*: This sentence is choose from measure.2.2. Select this to test the effect of the threshold on search results.
+
+- *expected results*(threshold=1.0):
+  
+  #table(align: left, columns: 1fr)[
+    ```shell
+    Warning: "all" is in the stop list and will be ignored.
+    Warning: "all" is in the stop list and will be ignored.
+    Warning: "of" is in the stop list and will be ignored.
+    Warning: "this" is in the stop list and will be ignored.
+    Warning: "and" is in the stop list and will be ignored.
+    Warning: "he" is in the stop list and will be ignored.
+    Warning: "to" is in the stop list and will be ignored.
+    Warning: "for" is in the stop list and will be ignored.
+    Warning: "t" is in the stop list and will be ignored.
+    Your query has multiple valid words, so we will search for them in the inverted index.
+    The words were found in files below:
+    File name                       Tf-Idf
+    measure.2.2.txt                 0.017464   0.015054
+    ```
+  ]
+
+- *test result*:
+  
+  #set table(
+    fill: (x, y) =>
+      if y == 0 {
+        gray.lighten(80%)
+      },
+  )
+
+  #show table.cell.where(y: 0): fakebold  
+
+  #table(columns: (8em, 1fr, 1fr), table.header([output],[ticks(ticks/search)],[time(s/search)]))[correct][992.903][9.9e-4]
+
+  The time is averaged from 1000 runs, and `threshold=1`.
+  
+  #set table(
+    fill: (x, y) =>
+      if y == 0 {
+        gray.lighten(80%)
+      },
+  )
+
+  #show table.cell.where(y: 0): fakebold  
+
+  #table(columns: (1fr, 1fr, 1fr, 1fr), table.header([threshold],[rank],[tf-idf], [search time]))[0.2][3/7][0.003003][2e-4][0.4][1/1][0.005808][2e-4][0.6][1/1][0.011469][3e-4][0.8][1/1][0.012638][5e-4][1.0][1/1][0.015054][9.9e-4]
+
+  From the test results, we can see that the works can be correctly screened out with a threshold of about 0.4.
+  
+  I also tested some sentences with similar results, which I will not list here.
+
 
 = Chapter 4: Analysis and Comments
+
+#v(.5em)
 
 #let render(theme_name) = [
   #state_block_theme.update(theme_name)
@@ -1350,43 +1800,64 @@ As you can see, these data points can be fitted with the product of linear funct
 
 == Space Complexity
 
-*Conclusion*: $O$(`WC` + `DocNum` + `HS` + `IN`)
+*Conclusion*: $O(W + D + H + I + M + K)$
 
-- `WC`: Word count all articles in _The Works_
-- `DocNum`: The number of documents(files, or articles in _The Works_)
-- `HS`: The size of the hash table which contains all stopwords
-- `IN`: The size of the inverted index(notice: we have removed the duplicated words, so every two nodes contain distinct words)
+- $W$: Word count all articles in _The Works_
+- $D$: The number of documents(files, or articles in _The Works_)
+- $H$: The size of the hash table which contains all stopwords
+- $I$: The size of the inverted index(notice: we have removed the duplicated words, so every two nodes contain distinct words)
+- $M$: The number of valid words
+- $K$: The number of found documents for a single word
 
 *Analysis*: 
 
 We should analyze the space complexity step by step:
 
-- #fakebold[Word count]: We use C++ STL containers(`pair`, `map` and `set`) to store the essential information about words and files. Specifically, `wordList` records the word count in all files for every word; `wordNumOfDoc` involves the word count for every file; `wordDocs` contains the number of articles where words apppear for every word. Consequently, the memory space in this step depends on both word count in all files(`WC`) and the number of files(`DocNum`).
+- #fakebold[Word count]: We use C++ STL containers(`pair`, `map` and `set`) to store the essential information about words and files. Specifically, `wordList` records the word count in all files for every word; `wordNumOfDoc` involves the word count for every file; `wordDocs` contains the number of articles where words apppear for every word. Consequently, the memory space in this step depends on both word count in all files ($W$) and the number of files($D$).
 
-- #fakebold[Stop words]: Actually, in the word count program, we also extracted the stop words from the variables mentioned above, then these words will be stored in a hash table for fast finding when building the inverted index. Therefore, the size of hash table(`HS`) represents the space that stopwords use.
+- #fakebold[Stop words]: Actually, in the word count program, we also extracted the stop words from the variables mentioned above, then these words will be stored in a hash table for fast finding when building the inverted index. Therefore, the size of hash table($H$) represents the space that stopwords use.
 
-- #fakebold[Inverted index]: The bulk of inverted index is stored in a B+ tree. It's universally acknowledged that the space complexity of B+ tree is $O(N)$, when $N$ is the number of data. However, our program has some uncertain factors, for instance, we can't control the size of the position list for each word, because the specific frequency of words are different. But what we can assure is that the total size of all position list is proportional to unduplicated word count, which is less than `WC`. As a consequence, we only care `IN` = $N times$ `ORDER`, where `ORDER` means the order of the B+ tree, and we allocate `ORDER + 1` bytes for data and children in each node.  
-- #fakebold[Query]:
+- #fakebold[Inverted index]: The bulk of inverted index is stored in a B+ tree. It's universally acknowledged that the space complexity of B+ tree is $O(N)$, when $N$ is the number of data. However, our program has some uncertain factors, for instance, we can't control the size of the position list for each word, because the specific frequency of words are different. But what we can assure is that the total size of all position list is proportional to unduplicated word count, which is less than $W$. As a consequence, we only care $I$ = $N times$ `ORDER`, where `ORDER` means the order of the B+ tree, and we allocate `ORDER + 1` bytes for data and children in each node.  
 
-To sum up, the space complexity of our program is $O$(`WC` + `DocNum` + `HS` + `IN`).
+- #fakebold[Query]: There are four data structures used in this part: `queryWord` stores up to `m` words, yielding $O(M)$; `posVec` holds document positions, with a maximum size of `k`, contributing $O(K)$; `freqMap` may contain up to `d` documents, leading to $O(D)$.; Temporary hash table `currentDocIdMap` also contributes $O(D)$. Consequently, the overall space complexity is $O(M + K + D)$.
+
+Although our main program calls other functions which are not listed above, but their space complexity overlaps with the above operations or they are too trivial to be considered, so we don't care much about these function.
+
+To sum up, the space complexity of our program is $O(W + D + H + I + M + K)$.
 
 
 == Time Complexity
 
-*Conclusion*: $O$(`WC` + `IN` $log$ `IN` + ) 
+*Conclusion*: $O(W + I log I + n + m + m log m + X)$
 
-- `WC`: Word count all articles in _The Works_
-- `IN`: The size of the inverted index
+- $W$: Word count all articles in _The Works_
+- $I$: The size of the inverted index
+- $n$: The query string of length
+- $m$: The number of valid words 
+- $X$: Vary in different situation
+  - #fakebold[single] valid word: $k log k$, where $k$ is the number of documents
+  - #fakebold[multiple] valid words: $m times (p log p)$, where $p$ is the total document results inworst-case scenario
 
 *Analysis*:
 
-- #fakebold[Word count and stop words]: Apparently, we count and handle every word in all files to implement the functions of word count and stop words detection. Therefore, the time complexity of this part is proportional to `WC`, which is mentioned above.
+- #fakebold[Word count and stop words]: Apparently, we count and handle every word in all files to implement the functions of word count and stop words detection. Therefore, the time complexity of this part is proportional to $W$, which is mentioned above.
 
-- #fakebold[Inverted Index]: The most frequent operations we have run in the inverted index are insertion and finding, so we consider these operations mainly. It's proved that the efficiency is $O(log N)$ for both insertion and finding, and for every node we should execute these operations at least once. Consequently, the whole time complexity of building inverted index is $O$(`IN` $log$ `IN`). Additionally, in our speed test above, we have drawn the curve chart of it, which can be fitted with $a + b dot N log N$ function, which proves the correctness of our analysis further.
+- #fakebold[Inverted Index]: The most frequent operations we have run in the inverted index are insertion and finding, so we consider these operations mainly. It's proved that the efficiency is $O(log N)$ for both insertion and finding, and for every node we should execute these operations at least once. Consequently, the whole time complexity of building inverted index is $O(I log I)$. Additionally, in our speed test above, we have drawn the curve chart of it, which can be fitted with $a + b dot N log N$ function, which proves the correctness of our analysis further.
 
-- #fakebold[Query]:
+- #fakebold[Query]: We will analyze this part step by step:
+  - #fakebold[character iteration]: The function iterates through each character in the query string of length $n$, resulting in $O(n)$.
+  - #fakebold[word processing]: Each word is checked against the stop words list and the inverted index. If $m$ is the number of valid words, this step is $O(m)$ since both checks have an average time complexity of $O(1)$.
+  - #fakebold[sorting]: The `queryWord` vector containing valid words is sorted, taking $O(m log m)$.
+  - #fakebold[ocument Search]: If there is one valid word, it retrieves the positions from the B+ tree (let's assume $k$ documents) and sorts them: $O(k log k)$. If there are multiple valid words, for a worst-case scenario of $p$ total document results, it processes each word, resulting in $O(m times (p log p))$.
 
-In a nutshell, the time complexity of our program is $O$(`WC` + `IN` $log$ `IN` + ).
+  As a consequence:
+
+  - For a #fakebold[single] valid word: $O(n + m + m log m + k log k)$
+  - For #fakebold[multiple] valid words: $O(n + m + m log m + m times (p log p))$
+
+For the same reason above, we also ignore the time complexity of some functions which have slight impact on the whole time complexity of our main program.
+
+In a nutshell, the time complexity of our program is $O(W + I log I + n + m + m log m + X)$.
 
 == Further Improvement
 
@@ -1394,13 +1865,51 @@ In a nutshell, the time complexity of our program is $O$(`WC` + `IN` $log$ `IN` 
 
 1. #fakebold[Algorithm refinement]: So far, we have learned few of the efficient algorithms and data structures, which means that our implementation of the mini search engine might not be the best practice. However, it's possible for us to devised more ingenious and efficient procedure to cope with this problem after we systematically learned more excellent algorithms and data structrues.
 
-2. #fakebold[Testing construction]: Although we come up with some testing cases, probably some crucial tests are still lost owing to our incomplete consideration. From our standpoint, it's difficult to find all typical cases for a program, but we're fully convinced that by delicate techniques and tricks for testing results, we can come up with tests as complete as possible.
+2. #fakebold[Testing construction]: Although we come up with some testing cases, probably some crucial tests are still lost, and potential bugs may exists in our programs owing to our incomplete consideration. From our standpoint, it's difficult to find all typical cases for a program, but we're fully convinced that by delicate techniques and tricks for testing results, we can come up with tests as complete as possible.
 
 3. #fakebold[Complexity analysis]: As you can see, it's awkward to analyze the complexity of some programs such as the space complexity of position list in nodes of inverted index. As a consequence, our analysis on complexity isn't very accurate. We will study the systematic method of analyzing the complexity and improve the precision of our analysis in the foreseeable future.
+
 
 = Appendix: Source code
 
 == File Structure
+
+#table(columns: 1fr, align: left)[
+  ```
+  .
+├── README.md
+├── code
+│   ├── Makefile
+│   ├── README.pdf
+│   ├── build
+│   ├── scripts
+│   │   ├── getStopWord
+│   │   ├── getStopWord.cpp
+│   │   ├── html2txt.py
+│   │   ├── iist_diagram.py
+│   │   ├── invIndexFunc.cpp
+│   │   ├── invIndexHeader.h
+│   │   ├── invIndexSearch.cpp
+│   │   ├── invIndexTest.cpp
+│   │   ├── search_main.cpp
+│   │   ├── search_test.cpp
+│   │   └── wordStem
+│   └── source
+│       ├── file_word_count.txt
+│       ├── search_test
+│       ├── shakespeare-master
+│       ├── shakespeare_works
+│       ├── stop_words.txt
+│       ├── inverted_index_tests
+│       ├── txt_title.txt
+│       ├── word_count.txt
+│       └── word_docs.txt
+└── documents
+    └── report-p1.pdf
+
+
+  ```
+]
 
 == getStopWord.cpp
 
@@ -1417,6 +1926,18 @@ In a nutshell, the time complexity of our program is $O$(`WC` + `IN` $log$ `IN` 
 == invIndexTest.cpp
 
 #importCode("../code/scripts/invIndexTest.cpp")
+
+== invIndexSearch.cpp
+
+#importCode("../code/scripts/invIndexSearch.cpp")
+
+== search_test.cpp
+
+#importCode("../code/scripts/search_test.cpp")
+
+== search_main.cpp
+
+#importCode("../code/scripts/search_main.cpp")
 
 = References
 

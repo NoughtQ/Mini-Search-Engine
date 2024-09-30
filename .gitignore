@@ -1,12 +1,19 @@
-# *.typ
+# directory
 .vscode
 template
 build
 shakespeare_works
 shakespeare-master
 invIndex-speedTest
+
+# meaningless files
+count_sum.xlsx
 plan.png
 
-
+# executable files
+miniSearchEngine
+getStopWord
+invIndexTest
+searchTest
 
 

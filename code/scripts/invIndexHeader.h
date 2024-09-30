@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string>
 #include <time.h>
+#include <vector>
 
 #ifndef INVINDEX_H
 #define INVINDEX_H   // In case of re-inclusion of this header file
@@ -16,11 +17,13 @@
 #define MAXDOCSUM 500000               // The maximum number of documents(files)
 #define MAXREADSTRLEN 101              // The maximum lenght of string for one read
 #define STOPWORDSUM 300                // The maximum number of stop words
-#define STOPWORDPATH "../source/stop_words.txt"  // The path of the file storing stop words
-#define DEFAULTFILEPOS "../source/tests"         // The default position of the file(for test mode)
-#define SHAKESPEAREDIR "../source/shakespeare_works"
-#define IISPEEDTESTDIR "../source/tests/invIndex-speedTest/880000"
-#define ITERATIONS 5
+#define STOPWORDPATH "source/stop_words.txt"        // The path of the file storing stop words
+#define DEFAULTFILEPOS "source/tests"               // The default position of the file(for test mode)
+#define SHAKESPEAREDIR "source/shakespeare_works"   // The path of Shakespeare's Works
+#define IISPEEDTESTDIR "source/tests/invIndex-speedTest/880000"        // Speed test files for inverted index 
+#define FILEWORDCOUNTPATH "source/file_word_count.txt"                    // The path of word count file  
+#define WORDDOCSPATH "source/word_docs.txt"                               // The path of word->doc file
+#define ITERATIONS 5                                                      // Iteration time used in speed test for inverted index
 
 // alias
 typedef char * string;
@@ -154,5 +157,13 @@ string WordStem(string term);
 
 // Print the ticks and duration, for -tr or --time function
 void PrintTime(clock_t start, clock_t end);
+
+void loadWordIdf(std::string filePath);
+void loadFileWordsNum(std::string filePath);
+void loadStopWords(std::string filePath);
+void search(std::string query, BplusTree T, int pageSize, double threshold);
+std::vector<std::pair<int,double>> FindBP2(string term, int docCnt, BplusTree T) ;
+std::vector<std::pair<int,double>> isSameTerm2(string term, int docCnt, NodeBP nodebp) ;
+std::vector<std::pair<int,double>> RetrievePL2(PosList L) ;
 
 #endif 

@@ -28,8 +28,10 @@ BplusTree InvertedIndex(bool isTest, bool containStopWords) {
     char fname[MAXREADSTRLEN];           // File name
     BplusTree InvIndex = CreateBP();     // Inverted index, stored in B+ tree
 
-    askforFilePos(dir, fname, isTest);   // Ask for the position of file or directory
+    // askforFilePos(dir, fname, isTest);   // Ask for the position of file or directory
     // Make a traversal in the directory(or a single file) and build the inverted index from it
+    strcpy(dir, SHAKESPEAREDIR);
+    isTest = false; 
     InvIndex = fileTraversaler(InvIndex, dir, fname, isTest, containStopWords);
     if (InvIndex->size) {                // If the inverted index contains the data, it indicates the success of building
         printf("Build successfully!\n");
@@ -634,11 +636,6 @@ int FindHashSW(string stopword, HashTb H, bool justSearch) {
     int pos;                              // Appropraite position
     int collisionNum = 0;                 // collision number, for quadratic probe
     pos = HashFunc(stopword, H->size);    // Use hashing function first
-
-    // If we just search a term in the hash table and assure it's not a stop word, then return
-    // if (justSearch && (H->data[pos]->info == Empty || strcmp(H->data[pos]->stopword, stopword))) {
-    //     return -1;
-    // }
 
     // Collision occurs!
     while (H->data[pos]->info != Empty && strcmp(H->data[pos]->stopword, stopword)) {
