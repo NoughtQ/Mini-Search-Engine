@@ -9,7 +9,7 @@ you need to install BeautifulSoup4 first.
 You can install by : pip install beautifulsoup4
 '''
 
-# *** Notice: I suggest you to run this script in the main directory of the project. ***
+# *** Notice: I suggest you to run this script in the code directory of the project. ***
 
 import os
 from bs4 import BeautifulSoup   # solve the html parsing problem
@@ -53,11 +53,11 @@ def extract_text_from_folder(folder_path,txt_path):
                 print(f"Text written to {write_path}\n")
 
 if __name__ == '__main__':
-    write_path = 'code/source/shakespeare_works'
+    write_path = 'source/shakespeare_works'
     os.makedirs(write_path, exist_ok=True)
-    folder_path = 'code/source/shakespeare-master'
+    folder_path = 'source/shakespeare-master'
     extract_text_from_folder(folder_path,write_path)
     # write the title to a new file
-    with open('code/source/txt_title.txt', 'w', encoding='utf-8') as title_file:
+    with open('source/txt_title.txt', 'w', encoding='utf-8') as title_file:
         for t in title:
             title_file.write(t+'\n')
