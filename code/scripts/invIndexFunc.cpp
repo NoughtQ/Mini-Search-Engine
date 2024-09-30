@@ -740,7 +740,7 @@ void PrintTime(clock_t start, clock_t end) {
     iterations = ITERATIONS;
     tick = end - start;
     duration = ((double)(tick)) / CLOCKS_PER_SEC;
-    printf("Iterations: %d\n", iterations);
+    //printf("Iterations: %d\n", iterations);
     printf("Ticks: %lu\n", (long)tick);    // Print the info
     printf("Duration: %.2fs\n", duration);
 }
