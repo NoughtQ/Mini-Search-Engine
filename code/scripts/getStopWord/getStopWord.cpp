@@ -29,15 +29,15 @@ int main()
     ifstream infile;    // input file
     ofstream outfile;   // output file
 
-    infile.open("code/source/txt_title.txt");    // open the file containing the file names
-    outfile.open("code/source/file_word_count.txt",ios::out);
+    infile.open("source/txt_title.txt");    // open the file containing the file names
+    outfile.open("source/file_word_count.txt",ios::out);
     while(infile >> file)
     {
         string line;
         ifstream in;
         
         // Read in the file and stem each word
-        in.open("code/source/shakespeare_works/"+file+".txt", ios::in);
+        in.open("source/shakespeare_works/"+file+".txt", ios::in);
         while(getline(in, line))
         {
             wstring word = L"";
@@ -67,9 +67,9 @@ int main()
     sort(vec.begin(), vec.end(), [](const Pair& a, const Pair& b) { return a.second.size() > b.second.size(); });
     
     wofstream out,out2,out3;     // output files
-    out.open("code/source/word_count.txt", ios::out);
-    out2.open("code/source/stop_words.txt", ios::out);
-    out3.open("code/source/word_docs.txt", ios::out);
+    out.open("source/word_count.txt", ios::out);
+    out2.open("source/stop_words.txt", ios::out);
+    out3.open("source/word_docs.txt", ios::out);
     for(Pair &word : vec)
     {
         out3 << word.first << " " << word.second.size() << endl;
@@ -85,5 +85,5 @@ int main()
 
 // To compile the program, run the following command in the terminal:
 // Depends on where you are, maybe you need to change the path accordingly.
-// (I assume you are in the main dictionary of the project)
-// g++ -o code/scripts/getstopwords/getStopWord code/scripts/getstopwords/getStopWord.cpp -Werror -Wall -Wextra 
+// (I assume you are in the code dictionary of the project)
+// g++ -o scripts/getStopWord/getStopWord scripts/getStopWord/getStopWord.cpp -Werror -Wall -Wextra 
