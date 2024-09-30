@@ -19,7 +19,7 @@
 #define STOPWORDSUM 300                // The maximum number of stop words
 #define FILEWORDCOUNTPATH "source/file_word_count.txt"
 #define WORDDOCSPATH "source/word_docs.txt"
-#define SHAKSPEAREDIR "source/shakespeare_works"
+#define SHAKESPEAREDIR "source/shakespeare_works"
 #define STOPWORDPATH "source/stop_words.txt"
 #define DEFAULTFILEPOS "source/inverted_index_test/tests"         // The default position of file
 
