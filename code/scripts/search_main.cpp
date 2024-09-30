@@ -18,7 +18,7 @@ int main()
     std::cout << "Inverted Index has been established successfully!"<<std::endl;
     std::cout << "--------------------------------------------------"<< std::endl;
 
-    //set default values for pageSize and threshold
+    //set values for pageSize and threshold from user input
     std::cout << "\033[1;32mWelcome to ***ShakespeareFinder***\033[0m" << std::endl;
     std::cout << "\033[34mPlease set the maximum number of records to be displayed per query\033[0m" << std::endl;
     int pageSize = 10;          //default value

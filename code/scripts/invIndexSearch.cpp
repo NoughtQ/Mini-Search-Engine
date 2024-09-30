@@ -71,7 +71,7 @@ void search(std::string query, BplusTree T, int pageSize, double threshold)
         }
     }
     // Sort the queryWord vector by wordIdf in descending order
-    sort(queryWord.begin(),queryWord.end(),[](const std::pair<std::wstring,double>& a, const std::pair<std::wstring,double>& b){return a.second < b.second;});
+    sort(queryWord.begin(),queryWord.end(),[](const std::pair<std::wstring,double>& a, const std::pair<std::wstring,double>& b){return a.second > b.second;});
     
     /* Search for documents that contain all the query words */
     int cntForDoc = 0;                                       // counter for pageSize
@@ -125,6 +125,7 @@ void search(std::string query, BplusTree T, int pageSize, double threshold)
         //hash table: {docId : sum of tf-idf}
         std::unordered_map<int, double> freqMap;
         //traverse the queryWord vector and search for each word in the inverted index
+        bool flag=false;
         for(auto &p : queryWord)
         {
             if(cntForWord == 0)
@@ -134,24 +135,34 @@ void search(std::string query, BplusTree T, int pageSize, double threshold)
             auto currentPosVec = FindBP2(wordForSearch, -1, T);
         
             //Transfer the values ​​in the vector to a temporary hash table, mainly for efficiency reasons.
-            //The temporary hash table only contains the docId that contain the current word.
-            //PS: Bool is just a placeholder and has no actual function.
-            std::unordered_map<int, bool> currentDocIdMap;
-            for(auto &pos : currentPosVec)
+            //The temporary hash table only contains the pair of docId and idf.
+            std::unordered_map<int, double> currentDocIdMap;
+            if(flag == false)
             {
-                currentDocIdMap[pos.first] = true;
-                freqMap[pos.first] += pos.second * p.second;    // tf-idf = tf * idf
+                for(auto &pos : currentPosVec)
+                    freqMap[pos.first] += pos.second * p.second;    // tf-idf = tf * idf
+                flag = true;
             }
-            if(freqMap.size()>0)
+            else
             {
-                //remove "it++" in "for(;;)"" to remove duplicates
-                for (auto it = freqMap.begin(); it != freqMap.end(); )
+                for(auto &pos : currentPosVec)
+                    currentDocIdMap[pos.first] = pos.second * p.second;
+                if(freqMap.size()>0)
                 {
-                    if (currentDocIdMap.find(it->first) == currentDocIdMap.end()) 
-                        it = freqMap.erase(it);//safe deletion
-                    else
-                        ++it;
+                    //remove "it++" in "for(;;)"" to remove duplicates
+                    for (auto it = freqMap.begin(); it != freqMap.end(); )
+                    {
+                        if (currentDocIdMap.find(it->first) == currentDocIdMap.end()) 
+                            it = freqMap.erase(it);//safe deletion
+                        else
+                        {
+                            it->second += currentDocIdMap[it->first];
+                            ++it;
+                        }
+                    }
                 }
+                else
+                    break;
             }
             cntForWord--;
         }
@@ -276,7 +287,7 @@ void loadWordIdf(std::string filePath)
     while(infile >> word >> freq)
     {
         //calculate idf : idf = log(total number of documents/(1 + number of documents contain the word))
-        idf = log(1115.0/(double)(1+freq));
+        idf = log((double)DOCTOTALNUM/(double)(1+freq));
         wordIdf[word] = idf;
     }
     infile.close();
