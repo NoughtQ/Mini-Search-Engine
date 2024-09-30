@@ -22,6 +22,7 @@
 #define SHAKESPEAREDIR "source/shakespeare_works"
 #define STOPWORDPATH "source/stop_words.txt"
 #define DEFAULTFILEPOS "source/inverted_index_test/tests"         // The default position of file
+#define ITERATIONS 5                                              // Iteration time used in speed test for inverted index
 
 // alias
 typedef char * string;

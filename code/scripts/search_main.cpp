@@ -24,7 +24,7 @@ int main()
     int pageSize = 10;          //default value
     std::cout << "Size(int): ";
     std::cin >> pageSize;
-    std::cout << "\033[34mPlease set the threshold (0-1) of the query:\033[0m" << std::endl;
+    std::cout << "\033[34mPlease set the threshold (0-1) of the query:" << std::endl << "(threshold = 1 means all the valid word in the query will be searched in the inverted index)\033[0m" << std::endl;
     std::cout << "Threshold(double): ";
     double threshold = 0.8;     //default value
     std::cin >> threshold;
