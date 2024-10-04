@@ -3,7 +3,7 @@
  * At the same time, it also counts the number of occurrences of 
  * each word in each document and then gets the stop words. 
  * The output files are word_count.txt, stop_words.txt, and word_docs.txt.
- * All of them are stored in the code/source directory.
+ * All of them are stored in the code/data directory.
 ****************************************/
 #include <iostream>
 #include <fstream>      // for file input/output
@@ -29,15 +29,15 @@ int main()
     ifstream infile;    // input file
     ofstream outfile;   // output file
 
-    infile.open("source/txt_title.txt");    // open the file containing the file names
-    outfile.open("source/file_word_count.txt",ios::out);
+    infile.open("data/txt_title.txt");    // open the file containing the file names
+    outfile.open("data/file_word_count.txt",ios::out);
     while(infile >> file)
     {
         string line;
         ifstream in;
         
         // Read in the file and stem each word
-        in.open("source/shakespeare_works/"+file+".txt", ios::in);
+        in.open("data/shakespeare_works/"+file+".txt", ios::in);
         while(getline(in, line))
         {
             wstring word = L"";
@@ -67,9 +67,9 @@ int main()
     sort(vec.begin(), vec.end(), [](const Pair& a, const Pair& b) { return a.second.size() > b.second.size(); });
     
     wofstream out,out2,out3;     // output files
-    out.open("source/word_count.txt", ios::out);
-    out2.open("source/stop_words.txt", ios::out);
-    out3.open("source/word_docs.txt", ios::out);
+    out.open("data/word_count.txt", ios::out);
+    out2.open("data/stop_words.txt", ios::out);
+    out3.open("data/word_docs.txt", ios::out);
     for(Pair &word : vec)
     {
         out3 << word.first << " " << word.second.size() << endl;

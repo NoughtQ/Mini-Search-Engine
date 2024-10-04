@@ -4,7 +4,7 @@
 #include <time.h>            // for clock()
 #include "invIndexHeader.h"
 
-const std::string root_path = "../source/search_test/input";
+const std::string root_path = "data/search_test/input";
 
 int main()
 {

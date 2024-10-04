@@ -1,0 +1,72 @@
+"nothing" is ignored due to threshold.
+"go" is ignored due to threshold.
+"then" is ignored due to threshold.
+"we" is ignored due to threshold.
+"her" is ignored due to threshold.
+"her" is ignored due to threshold.
+"that" is ignored due to threshold.
+.\1henryiv\1henryiv.3.2.html
+.\1henryiv\full.html
+.\2henryiv\full.html
+.\2henryvi\full.html
+.\3henryvi\3henryvi.3.3.html
+.\3henryvi\full.html
+.\allswell\full.html
+.\asyoulikeit\full.html
+.\cleopatra\full.html
+.\Comedy\allswellthatendswell\full.html
+.\comedy_errors\full.html
+.\coriolanus\full.html
+.\cymbeline\cymbeline.3.4.html
+.\cymbeline\full.html
+.\hamlet\full.html
+.\hamlet\hamlet.1.3.html
+.\henryv\full.html
+.\henryviii\full.html
+.\henryviii\henryviii.4.2.html
+.\History\1kinghenryiv\1henryiv.3.2.html
+.\History\1kinghenryiv\full.html
+.\History\2kinghenryiv\full.html
+.\History\2kinghenryvi\full.html
+.\History\3kinghenryvi\3henryvi.3.3.html
+.\History\3kinghenryvi\full.html
+.\john\full.html
+.\julius_caesar\full.html
+.\lear\full.html
+.\lear\lear.4.6.html
+.\lll\full.html
+.\macbeth\full.html
+.\measure\full.html
+.\measure\measure.5.1.html
+.\merchant\full.html
+.\merchant\merchant.3.2.html
+.\merry_wives\full.html
+.\merry_wives\merry_wives.1.4.html
+.\merry_wives\merry_wives.3.1.html
+.\midsummer\full.html
+.\midsummer\midsummer.2.1.html
+.\midsummer\midsummer.3.2.html
+.\much_ado\full.html
+.\much_ado\much_ado.3.1.html
+.\othello\full.html
+.\othello\othello.2.3.html
+.\pericles\full.html
+.\pericles\pericles.5.1.html
+.\richardii\full.html
+.\richardii\richardii.2.1.html
+.\richardiii\full.html
+.\romeo_juliet\full.html
+.\taming_shrew\full.html
+.\tempest\full.html
+.\tempest\tempest.2.1.html
+.\tempest\tempest.5.1.html
+.\timon\full.html
+.\titus\full.html
+.\Tragedy\hamlet\full.html
+.\Tragedy\hamlet\hamlet.1.3.html
+.\Tragedy\romeoandjuliet\full.html
+.\troilus_cressida\full.html
+.\troilus_cressida\troilus_cressida.1.3.html
+.\twelfth_night\full.html
+.\two_gentlemen\full.html
+.\winters_tale\full.html

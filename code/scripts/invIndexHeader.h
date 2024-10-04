@@ -17,12 +17,12 @@
 #define MAXDOCSUM 500000               // The maximum number of documents(files)
 #define MAXREADSTRLEN 101              // The maximum lenght of string for one read
 #define STOPWORDSUM 300                // The maximum number of stop words
-#define STOPWORDPATH "source/stop_words.txt"        // The path of the file storing stop words
-#define DEFAULTFILEPOS "source/tests"               // The default position of the file(for test mode)
-#define SHAKESPEAREDIR "source/shakespeare_works"   // The path of Shakespeare's Works
-#define IISPEEDTESTDIR "source/tests/invIndex-speedTest/880000"        // Speed test files for inverted index 
-#define FILEWORDCOUNTPATH "source/file_word_count.txt"                    // The path of word count file  
-#define WORDDOCSPATH "source/word_docs.txt"                               // The path of word->doc file
+#define STOPWORDPATH "data/stop_words.txt"        // The path of the file storing stop words
+#define DEFAULTFILEPOS "data/tests"               // The default position of the file(for test mode)
+#define SHAKESPEAREDIR "data/shakespeare_works"   // The path of Shakespeare's Works
+#define IISPEEDTESTDIR "data/tests/invIndex-speedTest/880000"        // Speed test files for inverted index 
+#define FILEWORDCOUNTPATH "data/file_word_count.txt"                    // The path of word count file  
+#define WORDDOCSPATH "data/word_docs.txt"                               // The path of word->doc file
 #define ITERATIONS 5                                                      // Iteration time used in speed test for inverted index
 
 // alias
