@@ -5,7 +5,7 @@ build
 shakespeare_works
 shakespeare-master
 invIndex-speedTest
-peer_review
+peer-review
 
 # meaningless files
 count_sum.xlsx
