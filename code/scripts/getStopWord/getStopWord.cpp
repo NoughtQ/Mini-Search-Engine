@@ -29,15 +29,15 @@ int main()
     ifstream infile;    // input file
     ofstream outfile;   // output file
 
-    infile.open("source/txt_title.txt");    // open the file containing the file names
-    outfile.open("source/file_word_count.txt",ios::out);
+    infile.open("data/txt_title.txt");    // open the file containing the file names
+    outfile.open("data/file_word_count.txt",ios::out);
     while(infile >> file)
     {
         string line;
         ifstream in;
         
         // Read in the file and stem each word
-        in.open("source/shakespeare_works/"+file+".txt", ios::in);
+        in.open("data/shakespeare_works/"+file+".txt", ios::in);
         while(getline(in, line))
         {
             wstring word = L"";
@@ -67,9 +67,9 @@ int main()
     sort(vec.begin(), vec.end(), [](const Pair& a, const Pair& b) { return a.second.size() > b.second.size(); });
     
     wofstream out,out2,out3;     // output files
-    out.open("source/word_count.txt", ios::out);
-    out2.open("source/stop_words.txt", ios::out);
-    out3.open("source/word_docs.txt", ios::out);
+    out.open("data/word_count.txt", ios::out);
+    out2.open("data/stop_words.txt", ios::out);
+    out3.open("data/word_docs.txt", ios::out);
     for(Pair &word : vec)
     {
         out3 << word.first << " " << word.second.size() << endl;
