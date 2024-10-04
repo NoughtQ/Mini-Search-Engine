@@ -17,11 +17,12 @@
 #define MAXDOCSUM 500000               // The maximum number of documents(files)
 #define MAXREADSTRLEN 101              // The maximum lenght of string for one read
 #define STOPWORDSUM 300                // The maximum number of stop words
-#define FILEWORDCOUNTPATH "source/file_word_count.txt"
-#define WORDDOCSPATH "source/word_docs.txt"
-#define SHAKSPEAREDIR "source/shakespeare_works"
-#define STOPWORDPATH "source/stop_words.txt"
-#define DEFAULTFILEPOS "source/inverted_index_test/tests"         // The default position of file
+#define FILEWORDCOUNTPATH "data/file_word_count.txt"
+#define WORDDOCSPATH "data/word_docs.txt"
+#define SHAKESPEAREDIR "data/shakespeare_works"
+#define STOPWORDPATH "data/stop_words.txt"
+#define DEFAULTFILEPOS "data/inverted_index_test/tests"         // The default position of file
+#define ITERATIONS 5                                              // Iteration time used in speed test for inverted index
 
 // alias
 typedef char * string;

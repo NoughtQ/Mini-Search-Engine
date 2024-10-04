@@ -1,7 +1,7 @@
 CXX = g++
 CFLAGS = -g
 
-BULID_DIR = ./bulid
+BUILD_DIR = ./build
 SRC_DIR = ./scripts
 
 # Header files
@@ -15,9 +15,9 @@ TEST_SEARCH = searchTest
 TEST_II = invIndexTest
 
 # Object files
-SEAM_OBJS = $(BULID_DIR)/invIndexFunc.o $(BULID_DIR)/invIndexSearch.o $(BULID_DIR)/search_main.o
-SEAT_OBJS = $(BULID_DIR)/invIndexFunc.o $(BULID_DIR)/invIndexSearch.o $(BULID_DIR)/search_test.o
-II_OBJS = $(BULID_DIR)/invIndexFunc.o $(BULID_DIR)/invIndexTest.o
+SEAM_OBJS = $(BUILD_DIR)/invIndexFunc.o $(BUILD_DIR)/invIndexSearch.o $(BUILD_DIR)/search_main.o
+SEAT_OBJS = $(BUILD_DIR)/invIndexFunc.o $(BUILD_DIR)/invIndexSearch.o $(BUILD_DIR)/search_test.o
+II_OBJS = $(BUILD_DIR)/invIndexFunc.o $(BUILD_DIR)/invIndexTest.o
 
 all: $(TARGET) $(STOPWORDS) $(TEST_SEARCH) $(TEST_II)
 
@@ -31,29 +31,29 @@ $(TEST_SEARCH): $(SEAT_OBJS) $(iiHeader) $(wsHeader)
 $(TEST_II): $(II_OBJS) $(iiHeader) $(wsHeader)
 	$(CXX) -o $(TEST_II) $(II_OBJS) $(CFLAGS)
 
-$(STOPWORDS): $(BULID_DIR)/stopwords.o
+$(STOPWORDS): $(BUILD_DIR)/stopwords.o
 	$(CXX) -o $(STOPWORDS) $< $(CFLAGS)
 
-$(BULID_DIR)/invIndexFunc.o: $(SRC_DIR)/invIndexFunc.cpp $(iiHeader) $(wsHeader)
+$(BUILD_DIR)/invIndexFunc.o: $(SRC_DIR)/invIndexFunc.cpp $(iiHeader) $(wsHeader)
 	$(CXX) -c $< -o $@ $(CFLAGS)
 
-$(BULID_DIR)/invIndexSearch.o: $(SRC_DIR)/invIndexSearch.cpp $(iiHeader) $(wsHeader)
+$(BUILD_DIR)/invIndexSearch.o: $(SRC_DIR)/invIndexSearch.cpp $(iiHeader) $(wsHeader)
 	$(CXX) -c $< -o $@ $(CFLAGS)
 
-$(BULID_DIR)/search_main.o: $(SRC_DIR)/search_main.cpp $(iiHeader) $(wsHeader)
+$(BUILD_DIR)/search_main.o: $(SRC_DIR)/search_main.cpp $(iiHeader) $(wsHeader)
 	$(CXX) -c $< -o $@ $(CFLAGS)
 
-$(BULID_DIR)/search_test.o: $(SRC_DIR)/search_test.cpp $(iiHeader)
+$(BUILD_DIR)/search_test.o: $(SRC_DIR)/search_test.cpp $(iiHeader)
 	$(CXX) -c $< -o $@ $(CFLAGS)
 
-$(BULID_DIR)/invIndexTest.o: $(SRC_DIR)/invIndexTest.cpp $(iiHeader) $(wsHeader)
+$(BUILD_DIR)/invIndexTest.o: $(SRC_DIR)/invIndexTest.cpp $(iiHeader) $(wsHeader)
 	$(CXX) -c $< -o $@ $(CFLAGS)
 
-$(BULID_DIR)/stopwords.o: $(SRC_DIR)/getStopWord/getStopWord.cpp
+$(BUILD_DIR)/stopwords.o: $(SRC_DIR)/getStopWord/getStopWord.cpp
 	$(CXX) -c $< -o $@ $(CFLAGS)
 
 .PHONY : clean
 clean:
-	rm $(BULID_DIR)/*.o
+	rm $(BUILD_DIR)/*.o
 	rm $(TARGET) $(STOPWORDS) $(TEST_SEARCH) $(TEST_II)
 

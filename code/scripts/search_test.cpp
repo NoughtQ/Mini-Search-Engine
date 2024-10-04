@@ -4,7 +4,7 @@
 #include <time.h>            // for clock()
 #include "invIndexHeader.h"
 
-const std::string root_path = "../source/search_test/input";
+const std::string root_path = "data/search_test/input";
 
 int main()
 {
@@ -16,7 +16,7 @@ int main()
     loadFileWordsNum(FILEWORDCOUNTPATH);    //load file-word count dictionary
     loadStopWords(STOPWORDPATH);            //load stop words list
     BplusTree InvIndex = CreateBP();        //create B+ tree for inverted index
-    InvIndex = fileTraversaler(InvIndex, (char *)SHAKSPEAREDIR, (char *)"", false, true);
+    InvIndex = fileTraversaler(InvIndex, (char *)SHAKESPEAREDIR, (char *)"", false, true);
     std::cout << "Inverted Index has been established successfully!"<<std::endl;
     std::cout << "--------------------------------------------------" << std::endl;
     
