@@ -43,7 +43,6 @@ extern string docNames[MAXDOCSUM];     // Array containing names of documents(gl
 struct nodebp {
     int size;                        // The size of the data in the node
     int childrenSize;                // The size of the children nodes of the node
-         
     Data data[ORDER + 1];            // The data of the node
     NodeBP children[ORDER + 1];      // The children nodes
     NodeBP parent;                   // The parent node(for split operation)
