@@ -169,6 +169,15 @@ We have used these major data structures and algorighms below:
 <!--v-->
 <!-- .slide: data-background="images/bg.png" -->
 
+## `InvertedIndex()`
+
+<div style="text-align: center">
+    <img src="images/23.png" width="75%" style="margin-top: 0px">
+</div>
+
+<!--v-->
+<!-- .slide: data-background="images/bg.png" -->
+
 ## B+ Trees
 
 <div style="text-align: center">
@@ -233,7 +242,7 @@ struct posdata {
 
 ## B+ Trees -- Operations
 
-``` cpp [|3-16]
+``` cpp [|3-5,11-16]
 BplusTree CreateBP();  // Create a B+ tree
 
 // Find a term in B+ tree
@@ -260,34 +269,9 @@ void PrintBPTree(BplusTree T);  // Print the B+ tree(level-order traversal)
 ## `FindBP()`
 
 <div style="text-align: center">
-    <img src="images/1.png" width="70%" style="margin-top: 0px">
+    <img src="images/24.png" width="65%" style="margin-top: 0px">
 </div>
 
-<!--v-->
-<!-- .slide: data-background="images/bg.png" -->
-
-## `isSameTerm()`
-
-<div class="mul-cols">
-
-<div class="col">
-
-<div style="text-align: center">
-    <img src="images/2.png" style="margin-top: 0px">
-</div>
-
-</div>
-
-<div class="col">
-
-<div style="text-align: center">
-    <img src="images/3.png" style="margin-top: 0px; margin-bottom: 0px">
-    <img src="images/4.png" style="margin-top: 0px">
-</div>
-
-</div>
-
-</div>
 
 <!--v-->
 <!-- .slide: data-background="images/bg.png" -->
@@ -295,16 +279,7 @@ void PrintBPTree(BplusTree T);  // Print the B+ tree(level-order traversal)
 ## `InsertBP()`
 
 <div style="text-align: center">
-    <img src="images/5.png" style="margin-top: 0px">
-</div>
-
-<!--v-->
-<!-- .slide: data-background="images/bg.png" -->
-
-## `SplitBP()`
-
-<div style="text-align: center">
-    <img src="images/6.png" width="60%" style="margin-top: 0px">
+    <img src="images/25.png" style="margin-top: 0px">
 </div>
 
 
@@ -314,7 +289,7 @@ void PrintBPTree(BplusTree T);  // Print the B+ tree(level-order traversal)
 ## `SplitBP()`
 
 <div style="text-align: center">
-    <img src="images/7.png" style="margin-top: 0px">
+    <img src="images/26.png" width="70%" style="margin-top: 0px">
 </div>
 
 
@@ -324,27 +299,9 @@ void PrintBPTree(BplusTree T);  // Print the B+ tree(level-order traversal)
 ## `SplitBP()`
 
 <div style="text-align: center">
-    <img src="images/8.png" style="margin-top: 0px">
+    <img src="images/27.png" width="70%" style="margin-top: 0px">
 </div>
 
-<!--v-->
-<!-- .slide: data-background="images/bg.png" -->
-
-## `SplitBP()`
-
-<div style="text-align: center">
-    <img src="images/9.png" width="58%" style="margin-top: 0px">
-</div>
-
-
-<!--v-->
-<!-- .slide: data-background="images/bg.png" -->
-
-## `SplitBP()`
-
-<div style="text-align: center">
-    <img src="images/10.png" width="100%" style="margin-top: 0px">
-</div>
 
 <!--v-->
 <!-- .slide: data-background="images/bg.png" -->
