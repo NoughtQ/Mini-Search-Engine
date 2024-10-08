@@ -86,13 +86,13 @@ In addition, this search engine has the features below:
 
 ## Overview
 
-We have used these major data structures and algorighms below:
+We have used these major data structures and algorithms below:
 
 - Word Count & Stop Words:
     - C++ STL: `map`、`set`、`vector`
+    - Word Stemming: [OleanderStemmingLibrary](https://github.com/Blake-Madden/OleanderStemmingLibrary)
 - Inverted Index:
     - B+ Trees
-        - Queue
     - Hashing
 - Query/Search:
     - TF-IDF Algorithm
@@ -353,7 +353,9 @@ void PrintHashTb(HashTb H);
 
 ## TF-IDF Algorithm
 
-[TF-IDF Algorithm](https://en.wikipedia.org/wiki/Tf%E2%80%93idf)(term frequency–inverse document frequency): A measure of importance of a word to a document in a corpus, adjusted for the fact that some words appear more frequently in general. In our project, we use the following formula to calculate tf, idf and tf-idf.
+[TF-IDF Algorithm](https://en.wikipedia.org/wiki/Tf%E2%80%93idf)(term frequency–inverse document frequency): A measure of importance of a word to a document in a corpus. 
+
+- It's based on the assumption that the most significant words for a document are those have high frequency in that document but low frequency in the entire document set.
 
 <div class="fragment">
 

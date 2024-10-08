@@ -2,7 +2,7 @@
 
 live:
 	@echo "Previewing main slides..."
-	-@reveal-md main.md -w --scripts heti_worker.js --template template.html --port 8888 || true
+	-@reveal-md main.md --template template.html --port 8888 || true
 
 build:
 	@echo "Building main slides..."
